@@ -30,9 +30,9 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 
 		CharMesh->SetSkeletalMesh(CMesh.Object);
 
-
 	}
 
+	CharMesh->RelativeRotation = FRotator(0.f, -90.f, 0.f);
 
 	// Create a camera boom attached to the root (capsule)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -54,7 +54,8 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 	ThirdPersonBoom->bDoCollisionTest = false;
 	ThirdPersonBoom->TargetArmLength = 175;
 	ThirdPersonBoom->SocketOffset = FVector(20.f, 75.f, 60.f);
-	ThirdPersonBoom->RelativeRotation = FRotator(-10.f, 80.f, 0.f);
+	ThirdPersonBoom->RelativeRotation = FRotator(-10.f, -10, 0.f);
+
 
 	// create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -72,6 +73,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->MaxFlySpeed = 600.f;
 
+	Perspective = CameraType::Side;
 
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
@@ -88,6 +90,21 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 	InputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	InputComponent->BindAxis("MoveRight", this, &ARWBY_CodenameColorsCharacter::MoveRight);
 
+	InputComponent->BindAction("PerspectiveSwitch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::SwitchCamera);
+
+	//Allows the the character to the turn based on mouse 
+	InputComponent->BindAxis("TurnRate", this, &ARWBY_CodenameColorsCharacter::TurnAtRate);
+	//Allows the character to look up baed on the mouse
+	InputComponent->BindAxis("LookUpRate", this, &ARWBY_CodenameColorsCharacter::LookUpAtRate);
+
+
+	//Allows the Chracter to turn based on controler input (not working ATM)
+	InputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+
+	//Allows the character to look up based on controller input (not working ATM)
+	InputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+
+
 }
 
 void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
@@ -97,5 +114,43 @@ void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 
 }
 
+//Turns the chracter based on MOUSE X input
+void ARWBY_CodenameColorsCharacter::TurnAtRate(float Rate)
+{
+	// calculate delta for this frame from the rate information
+	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+// Turns Chracter based on the MOUSE Y input
+void ARWBY_CodenameColorsCharacter::LookUpAtRate(float Rate)
+{
+	// calculate delta for this frame from the rate information
+	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+
+
+
+
+
+void ARWBY_CodenameColorsCharacter::SwitchCamera() {
+
+	switch(Perspective){
+
+		case(CameraType::None) :
+			break;
+		case(CameraType::Side):
+			SideViewCameraComponent->Deactivate();
+			FollowCamera->Activate();
+			Perspective = CameraType::Third;
+			break;
+		case(CameraType::Third):
+			FollowCamera->Deactivate();
+			SideViewCameraComponent->Activate();
+			Perspective = CameraType::Side;
+			break;
+	}
+
+}
 
 
