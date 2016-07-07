@@ -8,12 +8,10 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
-
-
-	// Don't rotate when the controller rotates.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+
 
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	CharMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharMeshTest"));
@@ -48,9 +46,10 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 	SideViewCameraComponent->AttachTo(CameraBoom, USpringArmComponent::SocketName);
 	SideViewCameraComponent->bUsePawnControlRotation = false; // We don't want the controller rotating the camera
 
+
 	ThirdPersonBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPeresonCameraBoom"));
 	ThirdPersonBoom->AttachTo(RootComponent);
-	ThirdPersonBoom->bAbsoluteRotation = false; // Rotation of the character should not affect rotation of boom
+	ThirdPersonBoom->bAbsoluteRotation = true;; // Rotation of the character should not affect rotation of boom
 	ThirdPersonBoom->bDoCollisionTest = false;
 	ThirdPersonBoom->TargetArmLength = 175;
 	ThirdPersonBoom->SocketOffset = FVector(20.f, 75.f, 60.f);
@@ -143,11 +142,23 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 			SideViewCameraComponent->Deactivate();
 			FollowCamera->Activate();
 			Perspective = CameraType::Third;
+/*
+			bUseControllerRotationPitch = false;
+			bUseControllerRotationYaw = true;
+			bUseControllerRotationRoll = false;
+			*/
+
 			break;
 		case(CameraType::Third):
 			FollowCamera->Deactivate();
 			SideViewCameraComponent->Activate();
 			Perspective = CameraType::Side;
+
+		/*bUseControllerRotationPitch = false;
+			bUseControllerRotationYaw = false;
+			bUseControllerRotationRoll = false;
+			*/
+
 			break;
 	}
 
