@@ -181,6 +181,6 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerPerformDodge(bool bDodging);
 		void ServerPerformDodge_Implementation(bool bDodging);
-		bool ServerPerformDodge_Validation(bool bDodging);
+		bool ServerPerformDodge_Validate(bool bDodging);
 
 };
