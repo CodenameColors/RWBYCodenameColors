@@ -437,7 +437,8 @@ void ARWBY_CodenameColorsCharacter::OnRep_Health() {
 void ARWBY_CodenameColorsCharacter::OnRep_Dodge() {
 
 	if (isDodging) {
-		OnDodge();
+		GetWorldTimerManager().SetTimer(DodgeDelay, this, &ARWBY_CodenameColorsCharacter::OnDodge, .324f);
+		//OnDodge();
 	}
 	else {
 	}

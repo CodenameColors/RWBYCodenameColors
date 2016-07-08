@@ -85,7 +85,7 @@ protected:
 	ECameraType::Type Perspective;
 
 	//Boolean used to determine the dodging
-	UPROPERTY(ReplicatedUsing = OnRep_Dodge)
+	UPROPERTY(ReplicatedUsing = OnRep_Dodge, EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Category = "RWBYCharacter" )
 	bool isDodging;
 
 	/** Called for forwards/backward input */
@@ -118,6 +118,8 @@ protected:
 		TEnumAsByte<ETask::Type> Task;
 
 	FTimerHandle TimerHandler_Task;
+
+	FTimerHandle DodgeDelay;
 
 public:
 	ARWBY_CodenameColorsCharacter();
