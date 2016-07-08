@@ -364,13 +364,18 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 void ARWBY_CodenameColorsCharacter::OnDodge() {
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
-
-	if (!(ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling())) {
-		ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
-	}
-	else {
-		ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 50000, false);
-	}
+	
+	if (ThisPlayer) {
+		
+		if (!(ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling())) {
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
+		}
+		else {
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 50000, false);
+		}
+		
+	
+		}
 		//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
 		//MyController->GetCharacter()->GetCharacterMovement()->AddImpulse(MyController->GetCharacter()->GetActorUpVector() * 20000, false);
 		//MyController->GetCharacter()->GetCharacterMovement()->Velocity += FVector(MyController->GetCharacter()->GetActorForwardVector().X,MyController->GetCharacter()->GetActorForwardVector().Y, 0) ;
