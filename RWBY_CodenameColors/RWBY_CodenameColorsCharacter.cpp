@@ -369,7 +369,7 @@ void ARWBY_CodenameColorsCharacter::OnDodge() {
 		ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
 	}
 	else {
-		ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 80000, false);
+		ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 50000, false);
 	}
 		//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
 		//MyController->GetCharacter()->GetCharacterMovement()->AddImpulse(MyController->GetCharacter()->GetActorUpVector() * 20000, false);
