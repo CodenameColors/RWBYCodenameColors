@@ -4,17 +4,22 @@
 #include "RWBY_CodenameColorsCharacter.generated.h"
 
 UENUM() 
-namespace CameraType{
-
-	enum Type {
-
-		None,
-		Side,
-		Third,
-
-	};
+	namespace ECameraType{
+		enum Type {
+			None,
+			Side,
+			Third,
+		};
 }
 
+UENUM()
+	namespace ETask {
+		enum Type {
+			None, 
+			Shooting,
+			Reload,
+	};
+}
 
 UCLASS(config=Game)
 class ARWBY_CodenameColorsCharacter : public ACharacter
@@ -45,11 +50,46 @@ class ARWBY_CodenameColorsCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* ThirdPersonCameraBoom;
 
+
 protected:
 
+	//method for replication of variables
+	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
+
+	//method used to switch the camera, and switch movement modes
 	void SwitchCamera();
 
-	CameraType::Type Perspective;
+	//method used to fire from the center of the camera (screen)
+	void OnFire();
+
+	void OnDodge();
+
+	//method used start shooting
+	void StartShooting();
+
+	//method used to stop shooting
+	void StopShooting();
+
+	//method used to start dodging
+	void StartDodging();
+
+	//method used to stop doding
+	void StopDodging();
+
+	void PerformDodge(bool bDodge);
+
+	//method used to preform tasks (Client)
+	void PerformTask(ETask::Type NewTask);
+
+	//Enum used to determine the camera/ movement state of the characters
+	ECameraType::Type Perspective;
+
+	//Boolean used to determine the dodging
+	UPROPERTY(ReplicatedUsing = OnRep_Dodge)
+	bool isDodging;
+
+	/** Called for forwards/backward input */
+	void MoveForward(float Value);
 
 	/**
 	* Called via input to turn at a given rate.
@@ -71,9 +111,40 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 	// End of APawn interface
 
+	UPROPERTY(ReplicatedUsing=OnRep_Health)
+		float Health;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Task)
+		TEnumAsByte<ETask::Type> Task;
+
+	FTimerHandle TimerHandler_Task;
 
 public:
 	ARWBY_CodenameColorsCharacter();
+
+	//method from the base class AActor, used to take damage. includes damage amount, infomation about the event, and the player of who did this
+	float TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) override;
+
+	//Deal damage
+	void DealDamage(float Damage, FHitResult LineTrace);
+	/*Replication methods (on_Reps)
+	*
+	*
+	*/
+
+	UFUNCTION()
+		void OnRep_Task();
+	
+	UFUNCTION()
+		void OnRep_Health();
+	
+	UFUNCTION()
+		void OnRep_Dodge();
+	
+	/*Other methods
+	*
+	*
+	*/
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
@@ -91,4 +162,25 @@ public:
 	FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USpringArmComponent* GetThirdPersonCameraBoom() const { return ThirdPersonCameraBoom; }
+
+	/*
+	* THIS SECTION IS FOR REPLICATION METHODS
+	*
+	*/
+protected:
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformTask(ETask::Type NewTask);
+		void ServerPerformTask_Implementation(ETask::Type NewTask);
+		bool ServerPerformTask_Validate(ETask::Type NewTask);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformDodge(bool bDodging);
+		void ServerPerformDodge_Implementation(bool bDodging);
+		bool ServerPerformDodge_Validation(bool bDodging);
+
 };
