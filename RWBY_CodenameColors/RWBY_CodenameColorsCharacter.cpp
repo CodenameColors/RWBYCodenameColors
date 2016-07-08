@@ -562,8 +562,6 @@ void ARWBY_CodenameColorsCharacter::OnRep_Ammo() {
 
 void ARWBY_CodenameColorsCharacter::OnRep_Dust() {
 
-	//bIsPoweredUp = false;
-
 }
 
 
