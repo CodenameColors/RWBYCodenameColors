@@ -53,6 +53,13 @@ class ARWBY_CodenameColorsCharacter : public ACharacter
 
 protected:
 
+	void UseDust();
+
+	void ResetDust();
+
+
+	void SetMaxAmmo(float NewMaxAmmo);
+
 	//method for replication of variables
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 
@@ -121,14 +128,37 @@ protected:
 
 	FTimerHandle DodgeDelay;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		float MaxAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Ammo)
+		float CurrentAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool Shooting;
+
+	// the state of character true if powered up
+	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Dust)
+		bool bIsPoweredUp;
+
+
 public:
 	ARWBY_CodenameColorsCharacter();
+
+	//Collect the pickups
+	void Collect();
+
+	// returns the power up state for this character
+	bool IsPoweredUp();
+
 
 	//method from the base class AActor, used to take damage. includes damage amount, infomation about the event, and the player of who did this
 	float TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) override;
 
 	//Deal damage
 	void DealDamage(float Damage, FHitResult LineTrace);
+
+
 	/*Replication methods (on_Reps)
 	*
 	*
@@ -143,6 +173,12 @@ public:
 	UFUNCTION()
 		void OnRep_Dodge();
 	
+	UFUNCTION()
+		void OnRep_Ammo();
+
+	UFUNCTION()
+		void OnRep_Dust();
+
 	/*Other methods
 	*
 	*

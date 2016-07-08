@@ -32,9 +32,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Pickup")
 	void SetActive(bool NewActiveState);
 
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(Server, Reliable, WithValidation)
 		void WasCollected();
 		virtual void WasCollected_Implementation();
+		bool WasCollected_Validate();
+
 
 protected: 
 	//holds the active state

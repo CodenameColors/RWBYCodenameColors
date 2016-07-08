@@ -5,6 +5,9 @@
 #include "DrawDebugHelpers.h"
 #include "UnrealNetwork.h"
 #include "MyPlayerController.h"
+#include "Pickup.h"
+#include "AmmoPickup.h"
+#include "DustPickup.h"
 
 ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 {
@@ -79,6 +82,8 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 
 	Health = 100;
 
+	CurrentAmmo = 5;
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
@@ -101,6 +106,8 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
 	InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
+
+	InputComponent->BindAction("Use Dust", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::UseDust);
 
 	//Allows the the character to the turn based on mouse 
 	InputComponent->BindAxis("TurnRate", this, &ARWBY_CodenameColorsCharacter::TurnAtRate);
@@ -320,7 +327,6 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 	* Makes the line be drawn on the normal, and not a define vector GREAT for attaking animations
 	**/
 	bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
-	
 
 	if (CamHitSuccess) {
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
@@ -411,6 +417,103 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformDodge_Validate(bool bDodging) {
 	return true; 
 }
 
+void ARWBY_CodenameColorsCharacter::SetMaxAmmo(float NewMaxAmmo) {
+
+	MaxAmmo = NewMaxAmmo;
+}
+
+bool ARWBY_CodenameColorsCharacter::IsPoweredUp() {
+
+	return bIsPoweredUp;
+}
+
+void ARWBY_CodenameColorsCharacter::Collect()
+{
+
+	if (CurrentAmmo < MaxAmmo) {
+
+		//Gets all the current overlapping actors
+		TArray<AActor*> CollectedActors;
+
+		GetCapsuleComponent()->GetOverlappingActors(CollectedActors);
+
+		for (int32 iCollected = 0; iCollected < CollectedActors.Num(); ++iCollected) {
+
+			APickup* const TestPickup = Cast<APickup>(CollectedActors[iCollected]);
+
+			if (TestPickup && !TestPickup->IsPendingKill() && TestPickup->IsActive()) {
+
+				AAmmoPickup* TestAmmoPickup = Cast<AAmmoPickup>(TestPickup);
+
+				if (TestAmmoPickup) {
+
+						CurrentAmmo += MaxAmmo / 5;
+
+						TestAmmoPickup->WasCollected();
+
+						if (GetNetMode() == NM_Client) {
+							TestAmmoPickup->WasCollected_Implementation();
+						}
+
+						TestAmmoPickup->SetActive(false);
+
+						OnRep_Ammo();
+
+					
+
+				}
+
+			}
+		}
+	}
+
+
+	if (!bIsPoweredUp) {
+		//Gets all the current overlapping actors
+		TArray<AActor*> CollectedActors;
+
+		GetCapsuleComponent()->GetOverlappingActors(CollectedActors);
+
+		for (int32 iCollected = 0; iCollected < CollectedActors.Num(); ++iCollected) {
+
+			APickup* const TestPickup = Cast<APickup>(CollectedActors[iCollected]);
+
+			if (TestPickup && !TestPickup->IsPendingKill() && TestPickup->IsActive()) {
+
+				ADustPickup* TestDustPickup = Cast<ADustPickup>(TestPickup);
+
+				if (TestDustPickup) {
+
+						TestDustPickup->WasCollected();
+
+						if (GetNetMode() == NM_Client) {
+							TestDustPickup->WasCollected_Implementation();
+						}
+
+						bIsPoweredUp = true;
+
+						OnRep_Dust();
+				}
+
+			}
+		}
+
+	}
+
+}
+
+void ARWBY_CodenameColorsCharacter::UseDust() {
+
+	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::ResetDust, 5.f);
+}
+
+void ARWBY_CodenameColorsCharacter::ResetDust() {
+
+	bIsPoweredUp = false;
+	OnRep_Dust();
+
+}
+
 /*On_Rep methods
 *
 *
@@ -420,9 +523,14 @@ void ARWBY_CodenameColorsCharacter::OnRep_Task() {
 	switch (Task) {
 
 	case(ETask::None) :
+		Shooting = false;
 		break;
 	case(ETask::Shooting) :
-		OnFire();
+		if (CurrentAmmo > 0) {
+			OnFire();
+			Shooting = true;
+		}
+		
 		break;
 	}
 }
@@ -444,6 +552,21 @@ void ARWBY_CodenameColorsCharacter::OnRep_Dodge() {
 	}
 }
 
+void ARWBY_CodenameColorsCharacter::OnRep_Ammo() {
+	CurrentAmmo -= 1;
+
+	FString PickupDebugString = FString::SanitizeFloat(CurrentAmmo);
+	UE_LOG(LogClass, Log, TEXT("You Have Collected %s"), *PickupDebugString);
+
+}
+
+void ARWBY_CodenameColorsCharacter::OnRep_Dust() {
+
+	//bIsPoweredUp = false;
+
+}
+
+
 /* Replication Method (Properties)
 *
 *
@@ -456,6 +579,9 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Task);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Health);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, isDodging);
-
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, MaxAmmo);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, CurrentAmmo);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Shooting);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bIsPoweredUp);
 }
 

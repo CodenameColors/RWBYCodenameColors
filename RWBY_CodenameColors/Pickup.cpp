@@ -30,6 +30,16 @@ void APickup::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
 
+	//Creates a FRotator of the type APickup
+	FRotator ActorRotation = APickup::GetActorRotation();
+
+	//adds 1.5 to the FRotator every frame
+	ActorRotation.Yaw += 1.5;
+
+	//Takes the ActorRotation FRotator and then sets it to be used on the current actor/ All of the actor's components
+	APickup::SetActorRotation(ActorRotation);
+
+
 }
 
 bool APickup::IsActive() {
@@ -45,6 +55,12 @@ void APickup::WasCollected_Implementation() {
 	FString PickupDebugString = GetName();
 	UE_LOG(LogClass, Log, TEXT("You Have Collected %s"), *PickupDebugString);
 }
+
+bool APickup::WasCollected_Validate() {
+
+	return true;
+}
+
 
 void APickup::SetMesh(class UStaticMeshComponent* NewMesh) {
 	PickupMesh = NewMesh;

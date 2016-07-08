@@ -13,7 +13,9 @@ class RWBY_CODENAMECOLORS_API ARubyRose : public ARWBY_CodenameColorsCharacter
 {
 	GENERATED_BODY()
 	
-	
-	
+public:
+
+	ARubyRose();
+
 	
 };
