@@ -53,6 +53,13 @@ class ARWBY_CodenameColorsCharacter : public ACharacter
 
 protected:
 
+	void UseDust();
+
+	void ResetDust();
+
+
+	void SetMaxAmmo(float NewMaxAmmo);
+
 	//method for replication of variables
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 
@@ -63,6 +70,12 @@ protected:
 	void OnFire();
 
 	void OnDodge();
+
+	void OnHeal();
+
+	void StartHealing();
+
+	void StopHealing();
 
 	//method used start shooting
 	void StartShooting();
@@ -76,10 +89,14 @@ protected:
 	//method used to stop doding
 	void StopDodging();
 
+	void PerformHealing(bool Healing);
+
 	void PerformDodge(bool bDodge);
 
 	//method used to preform tasks (Client)
 	void PerformTask(ETask::Type NewTask);
+
+	void PerformUseDust( );
 
 	//Enum used to determine the camera/ movement state of the characters
 	ECameraType::Type Perspective;
@@ -111,7 +128,7 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 	// End of APawn interface
 
-	UPROPERTY(ReplicatedUsing=OnRep_Health)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_Health)
 		float Health;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Task)
@@ -121,14 +138,48 @@ protected:
 
 	FTimerHandle DodgeDelay;
 
+	FTimerHandle PoweredUp;
+
+	FTimerHandle TimerHandler_Healing;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		float MaxAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Ammo)
+		float CurrentAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool Shooting;
+
+	// the state of character true if powered up
+	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Dust)
+		bool bIsPoweredUp;
+
+	// the state of character true if powered up
+	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool bCanPickupDust;
+
+	// the state of character true if powered up
+	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Health)
+		bool bCanHeal;
+
 public:
 	ARWBY_CodenameColorsCharacter();
+
+	//Collect the pickups
+	void Collect();
+
+	// returns the power up state for this character
+	bool IsPoweredUp();
+
 
 	//method from the base class AActor, used to take damage. includes damage amount, infomation about the event, and the player of who did this
 	float TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) override;
 
 	//Deal damage
 	void DealDamage(float Damage, FHitResult LineTrace);
+
+
 	/*Replication methods (on_Reps)
 	*
 	*
@@ -143,6 +194,12 @@ public:
 	UFUNCTION()
 		void OnRep_Dodge();
 	
+	UFUNCTION()
+		void OnRep_Ammo();
+
+	UFUNCTION()
+		void OnRep_Dust();
+
 	/*Other methods
 	*
 	*
@@ -185,4 +242,13 @@ protected:
 		void ServerPerformDodge_Implementation(bool bDodging);
 		bool ServerPerformDodge_Validate(bool bDodging);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformUseDust( );
+		void ServerPerformUseDust_Implementation( );
+		bool ServerPerformUseDust_Validate( );
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformHealing(bool Healing);
+		void ServerPerformHealing_Implementation(bool Healing);
+		bool ServerPerformHealing_validate(bool Healing);
 };
