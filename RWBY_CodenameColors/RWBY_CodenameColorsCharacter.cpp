@@ -372,6 +372,7 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 	**/
 	bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
 
+
 	if (CamHitSuccess) {
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
 		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 255, 0), true);
@@ -620,7 +621,7 @@ void ARWBY_CodenameColorsCharacter::OnRep_Dodge() {
 }
 
 void ARWBY_CodenameColorsCharacter::OnRep_Ammo() {
-	CurrentAmmo -= 1;
+	//CurrentAmmo -= 1;
 
 	FString PickupDebugString = FString::SanitizeFloat(CurrentAmmo);
 	UE_LOG(LogClass, Log, TEXT("You Have Collected %s"), *PickupDebugString);
