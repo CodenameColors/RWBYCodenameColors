@@ -78,11 +78,14 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = 600.f;
 	GetCharacterMovement()->MaxFlySpeed = 600.f;
 
+
 	Perspective = ECameraType::Side;
 
-	Health = 100;
+	Health = 50;
 
 	CurrentAmmo = 5;
+
+	bCanPickupDust = true;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -106,6 +109,10 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
 	InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
+
+	InputComponent->BindAction("Healing", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartHealing);
+	InputComponent->BindAction("Healing", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopHealing);
+
 
 	InputComponent->BindAction("Use Dust", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::UseDust);
 
@@ -260,6 +267,34 @@ void ARWBY_CodenameColorsCharacter::DealDamage(float Damage, FHitResult LineTrac
 	}
 }
 
+void ARWBY_CodenameColorsCharacter::StartHealing() {
+
+	PerformHealing(true);
+}
+
+void ARWBY_CodenameColorsCharacter::StopHealing() {
+
+	PerformHealing(false);
+}
+
+void ARWBY_CodenameColorsCharacter::PerformHealing(bool Healing) {
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformHealing(Healing);
+	}
+
+	bCanHeal = Healing;
+	OnRep_Health();
+}
+
+void ARWBY_CodenameColorsCharacter::ServerPerformHealing_Implementation(bool Healing) {
+	PerformHealing(Healing);
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerPerformHealing_Validate(bool Healing) {
+	return true;
+}
+
 void ARWBY_CodenameColorsCharacter::StartShooting() {
 
 	PerformTask(ETask::Shooting);
@@ -289,6 +324,15 @@ void ARWBY_CodenameColorsCharacter::ServerPerformTask_Implementation(ETask::Type
 
 bool ARWBY_CodenameColorsCharacter::ServerPerformTask_Validate(ETask::Type NewTask) {
 	return true;
+}
+
+void ARWBY_CodenameColorsCharacter::OnHeal() {
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, TEXT("HEALING"));
+	if (Health < 100) {
+		Health += 10;
+		PerformHealing(bCanHeal);
+	}	
 }
 
 void ARWBY_CodenameColorsCharacter::OnFire() {
@@ -397,6 +441,29 @@ void ARWBY_CodenameColorsCharacter::StopDodging() {
 	PerformDodge(false);
 }
 
+void ARWBY_CodenameColorsCharacter::UseDust() {
+	
+	PerformUseDust();
+}
+
+void ARWBY_CodenameColorsCharacter::PerformUseDust() {
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformUseDust();
+	}
+
+	OnRep_Dust();
+}
+
+void ARWBY_CodenameColorsCharacter::ServerPerformUseDust_Implementation() {
+
+	PerformUseDust();
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerPerformUseDust_Validate() {
+	return true;
+}
+
 void ARWBY_CodenameColorsCharacter::PerformDodge(bool bDodging) {
 
 	if (GetNetMode() == NM_Client) {
@@ -468,7 +535,7 @@ void ARWBY_CodenameColorsCharacter::Collect()
 	}
 
 
-	if (!bIsPoweredUp) {
+	if (bCanPickupDust) {
 		//Gets all the current overlapping actors
 		TArray<AActor*> CollectedActors;
 
@@ -490,9 +557,8 @@ void ARWBY_CodenameColorsCharacter::Collect()
 							TestDustPickup->WasCollected_Implementation();
 						}
 
-						bIsPoweredUp = true;
+						bCanPickupDust = false;
 
-						OnRep_Dust();
 				}
 
 			}
@@ -502,16 +568,12 @@ void ARWBY_CodenameColorsCharacter::Collect()
 
 }
 
-void ARWBY_CodenameColorsCharacter::UseDust() {
 
-	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::ResetDust, 5.f);
-}
 
 void ARWBY_CodenameColorsCharacter::ResetDust() {
 
 	bIsPoweredUp = false;
-	OnRep_Dust();
-
+	bCanPickupDust = true;
 }
 
 /*On_Rep methods
@@ -540,6 +602,11 @@ void ARWBY_CodenameColorsCharacter::OnRep_Health() {
 	FollowCamera->PostProcessSettings.SceneFringeIntensity = 100.f - Health * 0.5f;
 
 	SideViewCameraComponent->PostProcessSettings.SceneFringeIntensity = 100.f - Health * 0.5f;
+
+	if (bCanHeal) {
+		GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnHeal, 1.5f);
+	}
+
 }
 
 void ARWBY_CodenameColorsCharacter::OnRep_Dodge() {
@@ -562,8 +629,12 @@ void ARWBY_CodenameColorsCharacter::OnRep_Ammo() {
 
 void ARWBY_CodenameColorsCharacter::OnRep_Dust() {
 
-}
+	if (!bCanPickupDust) {
+		bIsPoweredUp = true;
+		GetWorldTimerManager().SetTimer(PoweredUp, this, &ARWBY_CodenameColorsCharacter::ResetDust, 5.f);
+	}
 
+}
 
 /* Replication Method (Properties)
 *
@@ -581,5 +652,7 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, CurrentAmmo);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Shooting);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bIsPoweredUp);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanPickupDust);
+
 }
 

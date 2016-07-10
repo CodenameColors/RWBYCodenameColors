@@ -71,6 +71,12 @@ protected:
 
 	void OnDodge();
 
+	void OnHeal();
+
+	void StartHealing();
+
+	void StopHealing();
+
 	//method used start shooting
 	void StartShooting();
 
@@ -83,10 +89,14 @@ protected:
 	//method used to stop doding
 	void StopDodging();
 
+	void PerformHealing(bool Healing);
+
 	void PerformDodge(bool bDodge);
 
 	//method used to preform tasks (Client)
 	void PerformTask(ETask::Type NewTask);
+
+	void PerformUseDust( );
 
 	//Enum used to determine the camera/ movement state of the characters
 	ECameraType::Type Perspective;
@@ -118,7 +128,7 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 	// End of APawn interface
 
-	UPROPERTY(ReplicatedUsing=OnRep_Health)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_Health)
 		float Health;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Task)
@@ -127,6 +137,10 @@ protected:
 	FTimerHandle TimerHandler_Task;
 
 	FTimerHandle DodgeDelay;
+
+	FTimerHandle PoweredUp;
+
+	FTimerHandle TimerHandler_Healing;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		float MaxAmmo;
@@ -141,6 +155,13 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Dust)
 		bool bIsPoweredUp;
 
+	// the state of character true if powered up
+	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool bCanPickupDust;
+
+	// the state of character true if powered up
+	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Health)
+		bool bCanHeal;
 
 public:
 	ARWBY_CodenameColorsCharacter();
@@ -221,4 +242,13 @@ protected:
 		void ServerPerformDodge_Implementation(bool bDodging);
 		bool ServerPerformDodge_Validate(bool bDodging);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformUseDust( );
+		void ServerPerformUseDust_Implementation( );
+		bool ServerPerformUseDust_Validate( );
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformHealing(bool Healing);
+		void ServerPerformHealing_Implementation(bool Healing);
+		bool ServerPerformHealing_validate(bool Healing);
 };
