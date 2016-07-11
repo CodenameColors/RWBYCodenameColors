@@ -29,8 +29,6 @@ protected:
 
 	void OnAttack();
 
-	void LedgeTrace();
-
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
 
