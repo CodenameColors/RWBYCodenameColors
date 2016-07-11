@@ -51,6 +51,7 @@ class ARWBY_CodenameColorsCharacter : public ACharacter
 	class USpringArmComponent* ThirdPersonCameraBoom;
 
 
+
 protected:
 
 	void UseDust();
@@ -163,8 +164,55 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Health)
 		bool bCanHeal;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool bCanWallTrace;
+
+
+	void LedgeTrace();
+
+	/*
+	static FORCEINLINE bool VTraceSphere(
+		AActor* ActorToIgnore,
+		const FVector& Start,
+		const FVector& End,
+		const float Radius,
+		FHitResult& HitOut,
+		ECollisionChannel TraceChannel = ECC_EngineTraceChannel1
+		) {
+		FCollisionQueryParams TraceParams(FName(TEXT("VictoreCore Trace")), true, ActorToIgnore);
+		TraceParams.bTraceComplex = true;
+		//TraceParams.bTraceAsyncScene = true;
+		TraceParams.bReturnPhysicalMaterial = false;
+
+		//Ignore Actors
+		TraceParams.AddIgnoredActor(ActorToIgnore);
+
+		//Re-initialize hit info
+		HitOut = FHitResult(ForceInit);
+
+		//Get World Source
+		TObjectIterator< AMyPlayerController > ThePC;
+		if (!ThePC) return false;
+
+
+		return ThePC->GetWorld()->SweepSingle(
+			HitOut,
+			Start,
+			End,
+			FQuat(),
+			TraceChannel,
+			FCollisionShape::MakeSphere(Radius),
+			TraceParams
+			);
+	}
+	*/
+	
 public:
 	ARWBY_CodenameColorsCharacter();
+
+	//void OnBeginOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+
+	virtual void Tick(float DeltaSeconds) override;
 
 	//Collect the pickups
 	void Collect();
@@ -225,6 +273,7 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetThirdPersonCameraBoom() const { return ThirdPersonCameraBoom; }
+
 
 	/*
 	* THIS SECTION IS FOR REPLICATION METHODS

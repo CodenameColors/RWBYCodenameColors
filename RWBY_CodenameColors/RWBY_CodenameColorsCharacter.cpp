@@ -87,6 +87,13 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 
 	bCanPickupDust = true;
 
+	bCanWallTrace = false;
+
+
+
+	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
+
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
@@ -130,6 +137,18 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 
 }
+
+
+void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
+
+	//Super::Tick(DeltaSeconds);
+
+	//if (bCanWallTrace) {
+	//	LedgeTrace();
+	//}
+
+}
+
 
 // Moves the Charcter forward
 void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
@@ -231,6 +250,14 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 	}
 
 }
+
+void ARWBY_CodenameColorsCharacter::LedgeTrace(){
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Silver, TEXT("WALL DETECTED"));
+
+}
+
+
 
 float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) {
 
@@ -398,8 +425,6 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 				APlayerController* MyController = Cast<APlayerController>(GetController());
 
 				TestCharacter->TakeDamage(100, DamageEvent, MyController, this);
-				
-
 			}
 		}
 
@@ -654,6 +679,7 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Shooting);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bIsPoweredUp);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanPickupDust);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanWallTrace);
 
 }
 

@@ -11,14 +11,14 @@ ARubyRose::ARubyRose() {
 
 	CurrentAmmo = MaxAmmo / 5;
 
-
+	//CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_TestingCharacter::OnOverlap);
 }
 
 void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent){
 
 	Super::SetupPlayerInputComponent(InputComponent);
 
-	InputComponent->BindAction("Attack", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
+	InputComponent->BindAction("Attack", IE_Pressed, this, &ARubyRose::StartAttack);
 	//InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
 
 }
@@ -39,12 +39,13 @@ void ARubyRose::OnAttack(){
 
 }
 
-void ARubyRose::ServerPerformAttack_Implementation()
-{
+
+void ARubyRose::ServerPerformAttack_Implementation(){
+
 }
 
-bool ARubyRose::ServerPerformAttack_Validate()
-{
+bool ARubyRose::ServerPerformAttack_Validate(){
+
 	return true;
 }
 

@@ -17,7 +17,6 @@ public:
 
 	ARubyRose();
 
-	
 protected:
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
@@ -29,6 +28,8 @@ protected:
 	void PerformAttack();
 
 	void OnAttack();
+
+	void LedgeTrace();
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
