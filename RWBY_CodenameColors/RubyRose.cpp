@@ -14,10 +14,12 @@ ARubyRose::ARubyRose() {
 
 }
 
-void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent)
-{
-	
+void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent){
+
 	Super::SetupPlayerInputComponent(InputComponent);
+
+	InputComponent->BindAction("Attack", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
+	//InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
 
 }
 
