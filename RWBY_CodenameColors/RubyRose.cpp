@@ -19,12 +19,9 @@ void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 	
 	Super::SetupPlayerInputComponent(InputComponent);
 
-<<<<<<< HEAD
 	InputComponent->BindAction("Attack", IE_Pressed, this, &ARubyRose::StartAttack);
 	//InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
 
-=======
->>>>>>> parent of 8239f70... Setting Inputs (Shooting)
 }
 
 void ARubyRose::StartAttack(){

@@ -679,7 +679,7 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Shooting);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bIsPoweredUp);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanPickupDust);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanWallTrace);
+	//DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanWallTrace);
 
 }
 

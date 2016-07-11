@@ -164,7 +164,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Health)
 		bool bCanHeal;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")
 		bool bCanWallTrace;
 
 
