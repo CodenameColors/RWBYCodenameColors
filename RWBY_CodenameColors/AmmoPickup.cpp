@@ -20,11 +20,11 @@ AAmmoPickup::AAmmoPickup() {
 
 	Collection->OnComponentBeginOverlap.AddDynamic(this, &AAmmoPickup::OnOverlap);
 
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> AmmoCrate(TEXT("StaticMesh'/Game/RWBY/Props/Ammo/Ammo_Pickup.Ammo_Pickup'"));
+	//static ConstructorHelpers::FObjectFinder<UStaticMesh> AmmoCrate(TEXT("StaticMesh'/Game/RWBY/Props/Ammo/Ammo_Pickup.Ammo_Pickup'"));
 
-	if (AmmoCrate.Succeeded()) {
-		GetMesh()->SetStaticMesh(AmmoCrate.Object);
-	}
+	//if (AmmoCrate.Succeeded()) {
+		//GetMesh()->SetStaticMesh(AmmoCrate.Object);
+	//}
 
 	GetMesh()->SetWorldScale3D(FVector(.3f, .3f, .3f));
 	Collection->SetWorldScale3D(FVector(1.f, 1.f, 1.f));

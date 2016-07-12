@@ -99,6 +99,9 @@ protected:
 
 	void PerformUseDust( );
 
+	void LedgeTrace();
+
+
 	//Enum used to determine the camera/ movement state of the characters
 	ECameraType::Type Perspective;
 
@@ -164,11 +167,8 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Health)
 		bool bCanHeal;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		bool bCanWallTrace;
-
-
-	void LedgeTrace();
 
 	/*
 	static FORCEINLINE bool VTraceSphere(

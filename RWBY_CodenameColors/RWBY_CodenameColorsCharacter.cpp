@@ -9,8 +9,8 @@
 #include "AmmoPickup.h"
 #include "DustPickup.h"
 
-ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
-{
+ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
@@ -89,8 +89,6 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter()
 
 	bCanWallTrace = false;
 
-
-
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
 
 
@@ -141,11 +139,11 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 
-	//Super::Tick(DeltaSeconds);
+	Super::Tick(DeltaSeconds);
 
-	//if (bCanWallTrace) {
-	//	LedgeTrace();
-	//}
+	if(bCanWallTrace) {
+		LedgeTrace();
+	}
 
 }
 
@@ -251,13 +249,91 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
 }
 
-void ARWBY_CodenameColorsCharacter::LedgeTrace(){
+void ARWBY_CodenameColorsCharacter::LedgeTrace() {
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Silver, TEXT("WALL DETECTED"));
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
+	if (!ThisPlayer) {
+		return;
+	}
+
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Silver, TEXT("WALL DETECTED"));
+
+	const FVector Location = GetMesh()->GetSocketLocation(FName("Hip"));
+
+		AActor* ActorToIgnore = this;
+		const FVector Start = GetMesh()->GetSocketLocation(FName("Hip"));
+		const FVector End = Location + ThisPlayer->GetCharacter()->GetActorForwardVector() * 150;
+		const float Radius = 20;
+
+		//const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("test"));
+		//gets the beginning socket
+		
+		FHitResult HitOut;
+		ECollisionChannel TraceChannel = ECC_EngineTraceChannel1;
+
+
+		FCollisionQueryParams TraceParams(FName(TEXT("LedgeTrace")), true, ActorToIgnore);
+		TraceParams.bTraceComplex = true;
+		//TraceParams.bTraceAsyncScene = true;
+		TraceParams.bReturnPhysicalMaterial = false;
+
+		//Ignore Actors
+		TraceParams.AddIgnoredActor(ActorToIgnore);
+
+		//Re-initialize hit info
+		HitOut = FHitResult(ForceInit);
+
+		//Get World Source
+		TObjectIterator<AMyPlayerController> ThePC;
+		if (ThePC) {
+
+			bool WallHit = ThePC->GetWorld()->SweepSingle(HitOut, Start, End, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
+			DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Blue, false, .01666);
+			DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
+
+			if (WallHit) {
+				FVector Location = Location + HitOut.Location;
+
+				DrawDebugSphere(GetWorld(), Location, Radius, 10, FColor::Red, false, .01666);
+				//DrawDebugLine(GetWorld(), Start, Location, FColor::Red, false, .01666);
+
+			}
+		}
+
+		//TRACE DOWN
+
+
+		const FVector LocationDown = GetMesh()->GetSocketLocation(FName("Hip1"));
+
+		const FVector DownStart = ThisPlayer->GetCharacter()->GetActorUpVector() *400+ LocationDown;
+		const FVector EndDown = Location;
+
+		//const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("test"));
+		//gets the beginning socket
+
+		FHitResult HitDown;
+
+		//Re-initialize hit info
+		HitDown = FHitResult(ForceInit);
+
+		if (ThePC) {
+
+			bool WallHit = ThePC->GetWorld()->SweepSingle(HitDown, DownStart, LocationDown, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
+			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Yellow, false, .01666);
+			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Yellow, false, .01666);
+
+			if (WallHit) {
+				FVector DownStart = DownStart + HitDown.Location;
+
+				DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, false, .01666);
+				//DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, 1);
+
+			}
+		}
 
 }
-
-
 
 float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) {
 
