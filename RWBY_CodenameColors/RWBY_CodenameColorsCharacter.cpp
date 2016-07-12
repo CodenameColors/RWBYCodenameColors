@@ -290,8 +290,8 @@ void ARWBY_CodenameColorsCharacter::LedgeTrace() {
 		if (ThePC) {
 
 			bool WallHit = ThePC->GetWorld()->SweepSingle(HitOut, Start, End, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
-			DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Blue, false, .01666);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
+			DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Red, false, .01666);
+			//DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
 
 			if (WallHit) {
 				FVector Location = Location + HitOut.Location;
@@ -321,8 +321,8 @@ void ARWBY_CodenameColorsCharacter::LedgeTrace() {
 		if (ThePC) {
 
 			bool WallHit = ThePC->GetWorld()->SweepSingle(HitDown, DownStart, LocationDown, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
-			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Yellow, false, .01666);
-			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Yellow, false, .01666);
+			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
+			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
 
 			if (WallHit) {
 				FVector DownStart = DownStart + HitDown.Location;
