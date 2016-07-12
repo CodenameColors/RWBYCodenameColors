@@ -170,6 +170,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		bool bCanWallTrace;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")
+		bool bCanClimb;
+
 	/*
 	static FORCEINLINE bool VTraceSphere(
 		AActor* ActorToIgnore,
