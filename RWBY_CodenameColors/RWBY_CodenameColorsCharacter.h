@@ -57,7 +57,8 @@ protected:
 	void UseDust();
 
 	void ResetDust();
-
+	
+	void OnCrouchEnd();
 
 	void SetMaxAmmo(float NewMaxAmmo);
 
@@ -99,7 +100,11 @@ protected:
 
 	void PerformUseDust( );
 
-	void LedgeTrace();
+	void PerformLedgeTrace(bool CanTrace);
+
+	void OnLedgeTrace();
+
+	void LedgeGrab();
 
 
 	//Enum used to determine the camera/ movement state of the characters
@@ -167,11 +172,14 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Health)
 		bool bCanHeal;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Ledge)
 		bool bCanWallTrace;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		bool bCanClimb;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool bHanging;
 
 	/*
 	static FORCEINLINE bool VTraceSphere(
@@ -250,6 +258,9 @@ public:
 
 	UFUNCTION()
 		void OnRep_Dust();
+	
+	UFUNCTION()
+		void OnRep_Ledge();
 
 	/*Other methods
 	*
@@ -303,4 +314,15 @@ protected:
 		void ServerPerformHealing(bool Healing);
 		void ServerPerformHealing_Implementation(bool Healing);
 		bool ServerPerformHealing_validate(bool Healing);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformLedgeTrace(bool CanTrace);
+		void ServerPerformLedgeTrace_Implementation(bool CanTrace);
+		bool ServerPerformLedgeTrace_Validate(bool CanTrace);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void OnCrouchStart();
+		void OnCrouchStart_Implementation();
+		bool OnCrouchStart_Validate();
+
 };

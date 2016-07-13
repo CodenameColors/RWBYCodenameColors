@@ -86,8 +86,8 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	CurrentAmmo = 5;
 
 	bCanPickupDust = true;
-
 	bCanWallTrace = false;
+	bCanClimb = false;
 
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
 
@@ -114,6 +114,9 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
 	InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
+
+	InputComponent->BindAction("Crouch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::OnCrouchStart);
+	InputComponent->BindAction("Crouch", IE_Released, this, &ARWBY_CodenameColorsCharacter::OnCrouchEnd);
 
 	InputComponent->BindAction("Healing", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartHealing);
 	InputComponent->BindAction("Healing", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopHealing);
@@ -142,15 +145,43 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 	Super::Tick(DeltaSeconds);
 
 	if(bCanWallTrace) {
-		LedgeTrace();
+		PerformLedgeTrace(bCanWallTrace);
 	}
+
+	if (bCanClimb) {
+		LedgeGrab();
+	}
+
 
 }
 
+void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
+	if (bHanging) {
+		ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		bHanging = false;
+		bCanClimb = false;
+	}
+}
+
+bool ARWBY_CodenameColorsCharacter::OnCrouchStart_Validate() {
+	return true;
+}
+
+void ARWBY_CodenameColorsCharacter::OnCrouchEnd(){
+
+
+}
 
 // Moves the Charcter forward
 void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 {
+
+	if (bHanging) {
+		return;
+	}
 
 	switch (Perspective) {
 		case(ECameraType::None) :
@@ -189,6 +220,11 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 
 void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 {
+
+	if (bHanging) {
+		return;
+	}
+
 	switch (Perspective){
 		case(ECameraType::None) :
 			return;
@@ -249,7 +285,28 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
 }
 
-void ARWBY_CodenameColorsCharacter::LedgeTrace() {
+void ARWBY_CodenameColorsCharacter::PerformLedgeTrace(bool CanTrace) {
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformLedgeTrace(CanTrace);
+	}
+
+	bCanWallTrace = true;
+
+	OnRep_Ledge();
+}
+
+void ARWBY_CodenameColorsCharacter::ServerPerformLedgeTrace_Implementation(bool CanTrace) {
+
+	PerformLedgeTrace(CanTrace);
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerPerformLedgeTrace_Validate(bool CanTrace) {
+	return true;
+}
+
+
+void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -304,36 +361,71 @@ void ARWBY_CodenameColorsCharacter::LedgeTrace() {
 
 		//TRACE DOWN
 
-
+		
 		const FVector LocationDown = GetMesh()->GetSocketLocation(FName("Hip1"));
 
-		const FVector DownStart = ThisPlayer->GetCharacter()->GetActorUpVector() *400+ LocationDown;
+		const FVector DownStart = ThisPlayer->GetCharacter()->GetActorUpVector() *150+ LocationDown;
 		const FVector EndDown = Location;
 
 		//const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("test"));
 		//gets the beginning socket
 
 		FHitResult HitDown;
+		FCollisionObjectQueryParams CamObjectQueryParams;
 
 		//Re-initialize hit info
 		HitDown = FHitResult(ForceInit);
 
 		if (ThePC) {
 
-			bool WallHit = ThePC->GetWorld()->SweepSingle(HitDown, DownStart, LocationDown, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
-			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
-			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
+			bool WallHit = ThePC->GetWorld()->LineTraceSingle(HitDown, DownStart, LocationDown, TraceParams, CamObjectQueryParams);
+			//DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
+			//DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
 
 			if (WallHit) {
-				FVector DownStart = DownStart + HitDown.Location;
+				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
 
-				DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, false, .01666);
-				//DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, 1);
+				if (HitDown.Distance < 120) {
+					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .01666);
+					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .01666);
+					bCanClimb = true;
+					bCanWallTrace = false;
+					FVector LocationOffset = FVector(DownStart.X, DownStart.Y - ThisPlayer->GetCharacter()->GetActorForwardVector().Y,
+						DownStart.Z - ThisPlayer->GetCharacter()->GetActorUpVector().Z * 130);
 
+					LocationOffset -= ThisPlayer->GetCharacter()->GetActorForwardVector() * 50;
+
+					//LocationOffset.Z = LocationOffset.Z -130;
+
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+
+					FRotator Forward = ThisPlayer->GetCharacter()->GetActorRotation();
+
+					ThisPlayer->GetCharacter()->SetActorLocation(LocationOffset, false, false);
+
+					//GetCapsuleComponent()->MoveComponent(FVector(1,0,0), FQuat(), false, false, EMoveComponentFlags::MOVECOMP_NoFlags, ETeleportType::TeleportPhysics );
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
+
+					bHanging = true;
+				}
+				
+				//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 			}
 		}
+}
+
+void ARWBY_CodenameColorsCharacter::LedgeGrab(){
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
+	if (!ThisPlayer) {
+		return;
+	}
+
+	//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
 }
+
 
 float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) {
 
@@ -738,6 +830,12 @@ void ARWBY_CodenameColorsCharacter::OnRep_Dust() {
 
 }
 
+void ARWBY_CodenameColorsCharacter::OnRep_Ledge() {
+
+	OnLedgeTrace();
+
+}
+
 /* Replication Method (Properties)
 *
 *
@@ -756,6 +854,8 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bIsPoweredUp);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanPickupDust);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanWallTrace);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanClimb);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bHanging);
 
 }
 
