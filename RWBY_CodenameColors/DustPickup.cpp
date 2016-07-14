@@ -52,7 +52,7 @@ bool ADustPickup::IsDustActive()
 
 void ADustPickup::OnOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult) {
 	if (Role == ROLE_Authority) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OVERLAP DETECTED"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OVERLAP DETECTED"));
 		ARWBY_CodenameColorsCharacter* Test = Cast<ARWBY_CodenameColorsCharacter>(OtherActor);
 
 		if (Test) {

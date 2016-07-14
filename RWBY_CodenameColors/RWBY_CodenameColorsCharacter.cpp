@@ -88,6 +88,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	bCanPickupDust = true;
 	bCanWallTrace = false;
 	bCanClimb = false;
+	bFallDamage = false;
 
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
 
@@ -102,8 +103,9 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 {
 	// set up gameplay key bindings
-	InputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	InputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	InputComponent->BindAction("Jump", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartJump);
+	InputComponent->BindAction("Jump", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopJump);
+
 	InputComponent->BindAxis("MoveRight", this, &ARWBY_CodenameColorsCharacter::MoveRight);
 	InputComponent->BindAxis("MoveForward", this, &ARWBY_CodenameColorsCharacter::MoveForward);
 
@@ -141,8 +143,10 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 
 void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
-
+	
 	Super::Tick(DeltaSeconds);
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 
 	if(bCanWallTrace) {
 		PerformLedgeTrace(bCanWallTrace);
@@ -152,8 +156,98 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 		LedgeGrab();
 	}
 
+	if (bDoneClimbing) {
+
+		bDoneClimbing = false;
+		bCanClimb = false;
+		bCanWallTrace = false;
+		bClimbing = false;
+		bHanging = false;
+
+		//AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+		ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+		ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
+
+
+		//CameraBoom->AttachTo(RootComponent);
+	}
+		
+	if (ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z < -1500 && ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling() && !bFallDamage) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, TEXT("APEX REACHED "));
+		Health -= (ThisPlayer->GetCharacter()->GetMovementComponent()->GetMaxSpeed() / 600) * 10;
+		//float Velocity = ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z;
+		FallDamage();
+	}
+	if (!ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling() && bFallDamage) {
+
+		Health -= (ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z / 2000) * 10;
+		OnRep_Health();
+
+		bFallDamage = false;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Silver, TEXT("Fall Damage Reset"));
+	}
+}
+
+
+//UNUSED AT THE MOMENT
+void ARWBY_CodenameColorsCharacter::MoveCharacter( ){
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
+
+	bCanClimb = false;
+	bHanging = false;
+
+	ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
 
 }
+
+void ARWBY_CodenameColorsCharacter::FallDamage_Implementation(){
+
+	bFallDamage = true;
+
+
+}
+
+bool ARWBY_CodenameColorsCharacter::FallDamage_Validate() {
+	return true;
+}
+void ARWBY_CodenameColorsCharacter::StartJump(){
+	
+
+	if (bCanClimb) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Space Pressed"));
+
+		SetClimbing(true);
+
+		//bCanClimb = false;
+		//bHanging = false;
+		
+	}
+	else {
+		bPressedJump = true;
+		JumpKeyHoldTime = 0.0f;
+	}
+
+}
+
+void ARWBY_CodenameColorsCharacter::SetClimbing_Implementation(bool NewState){
+	bClimbing = NewState;
+}
+
+bool ARWBY_CodenameColorsCharacter::SetClimbing_Validate(bool NewState){
+	return true;
+}
+
+void ARWBY_CodenameColorsCharacter::StopJump() {
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Space Released"));
+	bPressedJump = false;
+	bClimbing = false;
+	JumpKeyHoldTime = 0.0f;
+}
+
 
 void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 
@@ -163,6 +257,8 @@ void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 		ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		bHanging = false;
 		bCanClimb = false;
+		bCanWallTrace = false;
+		bClimbing = false;
 	}
 }
 
@@ -178,8 +274,8 @@ void ARWBY_CodenameColorsCharacter::OnCrouchEnd(){
 // Moves the Charcter forward
 void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 {
-
-	if (bHanging) {
+	
+	if (bHanging || bLedgeTrip) {
 		return;
 	}
 
@@ -221,7 +317,7 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 {
 
-	if (bHanging) {
+	if (bHanging || bLedgeTrip) {
 		return;
 	}
 
@@ -379,13 +475,14 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 		if (ThePC) {
 
 			bool WallHit = ThePC->GetWorld()->LineTraceSingle(HitDown, DownStart, LocationDown, TraceParams, CamObjectQueryParams);
-			//DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
-			//DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
+			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
+			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
 
 			if (WallHit) {
 				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
 
-				if (HitDown.Distance < 120) {
+				if (HitDown.Distance < 60 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
+					
 					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .01666);
 					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .01666);
 					bCanClimb = true;
@@ -407,6 +504,40 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 					ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
 
 					bHanging = true;
+					bCanClimb = true;
+					ClimbPosition = DownStart + ThisPlayer->GetCharacter()->GetActorUpVector() * 90;
+
+					//bClimbing = true;
+;
+				}
+
+				else {
+
+					/*
+					if(ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()){
+
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Ledge Trip Detected"));
+
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+					FRotator Forward = ThisPlayer->GetCharacter()->GetActorRotation();
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
+
+					FVector LocationOffset = DownStart;
+					LocationOffset += ThisPlayer->GetCharacter()->GetActorUpVector() * 100;
+
+					ThisPlayer->GetCharacter()->SetActorLocation(LocationOffset, false, false);
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+					//bDoneClimbing = false;
+					//bCanClimb = false;
+					//bCanWallTrace = false;
+					//bClimbing = false;
+					//bHanging = false;
+					bLedgeTrip = true;
+					OnRep_Trip();
+					}
+					*/
+					//ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
 				}
 				
 				//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
@@ -831,8 +962,14 @@ void ARWBY_CodenameColorsCharacter::OnRep_Dust() {
 }
 
 void ARWBY_CodenameColorsCharacter::OnRep_Ledge() {
+	
+	if (!bCanClimb) {
+		OnLedgeTrace();
+	}
+}
 
-	OnLedgeTrace();
+void ARWBY_CodenameColorsCharacter::OnRep_Trip(){
+
 
 }
 
@@ -856,6 +993,7 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanWallTrace);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanClimb);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bHanging);
-
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bClimbing);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, ClimbPosition);
 }
 

@@ -53,6 +53,11 @@ class ARWBY_CodenameColorsCharacter : public ACharacter
 
 
 protected:
+	
+	void StartJump();
+	void StopJump();
+
+	void MoveCharacter( );
 
 	void UseDust();
 
@@ -151,6 +156,9 @@ protected:
 
 	FTimerHandle TimerHandler_Healing;
 
+	float FallDamageMultiplyer;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		float MaxAmmo;
 
@@ -180,6 +188,21 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		bool bHanging;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool bClimbing;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool bDoneClimbing;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Trip)
+		bool bLedgeTrip;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Trip)
+		bool bFallDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		FVector ClimbPosition;
 
 	/*
 	static FORCEINLINE bool VTraceSphere(
@@ -262,6 +285,8 @@ public:
 	UFUNCTION()
 		void OnRep_Ledge();
 
+	UFUNCTION()
+		void OnRep_Trip();
 	/*Other methods
 	*
 	*
@@ -324,5 +349,16 @@ protected:
 		void OnCrouchStart();
 		void OnCrouchStart_Implementation();
 		bool OnCrouchStart_Validate();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void SetClimbing(bool NewState);
+		void SetClimbing_Implementation(bool NewState);
+		bool SetClimbing_Validate(bool NewState);
+
+		UFUNCTION(Server, Reliable, WithValidation)
+		void FallDamage();
+		void FallDamage_Implementation();
+		bool FallDamage_Validate();
+
 
 };

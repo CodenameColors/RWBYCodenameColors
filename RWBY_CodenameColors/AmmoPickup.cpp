@@ -53,12 +53,12 @@ void AAmmoPickup::SetAmmoPickup(float NewAmmoAmount)
 
 void AAmmoPickup::OnOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult) {
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OVERLAP DETECTED"));
+	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OVERLAP DETECTED"));
 	
 	ARWBY_CodenameColorsCharacter* RWBYCharacter = Cast<ARWBY_CodenameColorsCharacter>(OtherActor);
 
 	if (RWBYCharacter) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OVERLAPED WITH RWBYCHARACTER"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("OVERLAPED WITH RWBYCHARACTER"));
 
 		RWBYCharacter->Collect();
 	}
