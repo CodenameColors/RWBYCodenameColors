@@ -70,7 +70,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Face in the direction we are moving..
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f); // ...at this rotation rate
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 1200.0f, 0.0f); // ...at this rotation rate
 	GetCharacterMovement()->GravityScale = 2.f;
 	GetCharacterMovement()->AirControl = 0.80f;
 	GetCharacterMovement()->JumpZVelocity = 1000.f;
@@ -88,7 +88,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	bCanPickupDust = true;
 	bCanWallTrace = false;
 	bCanClimb = false;
-	bFallDamage = false;
+	bCanWallSlide = false;
 
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
 
@@ -148,44 +148,37 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 
-	if(bCanWallTrace) {
-		PerformLedgeTrace(bCanWallTrace);
-	}
+	if (ThisPlayer) {
 
-	if (bCanClimb) {
-		LedgeGrab();
-	}
+	
+		if(bCanWallTrace) {
+			PerformLedgeTrace(bCanWallTrace);
+		}
 
-	if (bDoneClimbing) {
+		if (bCanWallSlide) {
+			PerformWallSlide(bCanWallSlide);
+		}
 
-		bDoneClimbing = false;
-		bCanClimb = false;
-		bCanWallTrace = false;
-		bClimbing = false;
-		bHanging = false;
+		if (bCanClimb) {
+			LedgeGrab();
+		}
 
-		//AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
-		ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		if (bDoneClimbing) {
 
-		ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
+			bDoneClimbing = false;
+			bCanClimb = false;
+			bCanWallTrace = false;
+			bClimbing = false;
+			bHanging = false;
+
+			//AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+			ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
 
 
-		//CameraBoom->AttachTo(RootComponent);
-	}
-		
-	if (ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z < -1500 && ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling() && !bFallDamage) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, TEXT("APEX REACHED "));
-		Health -= (ThisPlayer->GetCharacter()->GetMovementComponent()->GetMaxSpeed() / 600) * 10;
-		//float Velocity = ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z;
-		FallDamage();
-	}
-	if (!ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling() && bFallDamage) {
-
-		Health -= (ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z / 2000) * 10;
-		OnRep_Health();
-
-		bFallDamage = false;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Silver, TEXT("Fall Damage Reset"));
+			//CameraBoom->AttachTo(RootComponent);
+		}
 	}
 }
 
@@ -203,18 +196,10 @@ void ARWBY_CodenameColorsCharacter::MoveCharacter( ){
 
 }
 
-void ARWBY_CodenameColorsCharacter::FallDamage_Implementation(){
 
-	bFallDamage = true;
-
-
-}
-
-bool ARWBY_CodenameColorsCharacter::FallDamage_Validate() {
-	return true;
-}
 void ARWBY_CodenameColorsCharacter::StartJump(){
 	
+
 
 	if (bCanClimb) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Space Pressed"));
@@ -260,6 +245,8 @@ void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 		bCanWallTrace = false;
 		bClimbing = false;
 	}
+	
+
 }
 
 bool ARWBY_CodenameColorsCharacter::OnCrouchStart_Validate() {
@@ -268,14 +255,15 @@ bool ARWBY_CodenameColorsCharacter::OnCrouchStart_Validate() {
 
 void ARWBY_CodenameColorsCharacter::OnCrouchEnd(){
 
-
+	
+	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnRep_Slide, .15f);
 }
 
 // Moves the Charcter forward
 void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 {
-	
-	if (bHanging || bLedgeTrip) {
+
+	if (bHanging) {
 		return;
 	}
 
@@ -317,7 +305,7 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 {
 
-	if (bHanging || bLedgeTrip) {
+	if (bHanging) {
 		return;
 	}
 
@@ -330,6 +318,10 @@ void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 			break;
 
 		case(ECameraType::Third):
+
+			if (true) {
+
+			}
 			//sets a new Movement speed
 			GetCharacterMovement()->MaxWalkSpeed = 600.f;
 
@@ -377,6 +369,44 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 			SideViewCameraComponent->Activate();
 			Perspective = ECameraType::Side;
 			break;
+	}
+
+}
+
+void ARWBY_CodenameColorsCharacter::PerformWallSlide(bool CanSlide) {
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformWallSlide(CanSlide);
+	}
+
+	//bSliding = true;
+
+	OnRep_Slide();
+}
+
+void ARWBY_CodenameColorsCharacter::ServerPerformWallSlide_Implementation(bool CanSlide) {
+	PerformWallSlide(CanSlide);
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerPerformWallSlide_Validate(bool CanSlide) {
+	return true;
+}
+
+void ARWBY_CodenameColorsCharacter::OnWallSlide() {
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
+	if (ThisPlayer) {
+		if (!bHanging && !bCanClimb) {
+			if (ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -200) {
+				bSliding = true;
+				ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z = -200;
+				//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
+				ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.X = 0;
+
+
+			}
+		}
 	}
 
 }
@@ -479,10 +509,13 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
 
 			if (WallHit) {
-				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
 
+				bCanWallSlide = false;
+				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
 				if (HitDown.Distance < 60 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
-					
+
+
+
 					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .01666);
 					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .01666);
 					bCanClimb = true;
@@ -508,11 +541,18 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 					ClimbPosition = DownStart + ThisPlayer->GetCharacter()->GetActorUpVector() * 90;
 
 					//bClimbing = true;
-;
+					;
 				}
 
-				else {
+				else if (HitDown.Distance > 60 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
 
+				}
+				else {
+					bCanWallSlide = true;
+				}
+
+					//if (!bHanging && !bCanClimb)
+						//PerformWallSlide(bCanWallSlide);
 					/*
 					if(ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()){
 
@@ -538,7 +578,8 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 					}
 					*/
 					//ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
-				}
+				
+			
 				
 				//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 			}
@@ -724,6 +765,8 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 				APlayerController* MyController = Cast<APlayerController>(GetController());
 
 				TestCharacter->TakeDamage(100, DamageEvent, MyController, this);
+
+				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *CameraHit.GetComponent()->GetName());
 			}
 		}
 
@@ -739,6 +782,11 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 void ARWBY_CodenameColorsCharacter::OnDodge() {
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
+	if (bHanging) {
+		return;
+	}
+
 	
 	if (ThisPlayer) {
 		
@@ -818,6 +866,8 @@ bool ARWBY_CodenameColorsCharacter::IsPoweredUp() {
 
 	return bIsPoweredUp;
 }
+
+
 
 void ARWBY_CodenameColorsCharacter::Collect()
 {
@@ -971,6 +1021,16 @@ void ARWBY_CodenameColorsCharacter::OnRep_Ledge() {
 void ARWBY_CodenameColorsCharacter::OnRep_Trip(){
 
 
+}
+
+void ARWBY_CodenameColorsCharacter::OnRep_Slide() {
+
+	if (!bHanging) {
+		bCanWallTrace = true;
+		bCanWallSlide = true;
+		
+		OnWallSlide();
+	}
 }
 
 /* Replication Method (Properties)

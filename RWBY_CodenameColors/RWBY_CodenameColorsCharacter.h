@@ -21,6 +21,44 @@ UENUM()
 	};
 }
 
+UENUM()
+namespace EDustType {
+	enum Type {
+		None,
+		Ice,
+		Fire,
+		Gravity,
+		Electic,
+		Water,
+	};
+}
+
+UENUM()
+namespace EPoweredState {
+	enum Type {
+		None,
+		FiredUp,
+		IcedUp,
+		GravityUp,
+		ShockedUp,
+		WaterUp,
+	};
+}
+
+
+UENUM()
+namespace ECharacterState {
+	enum Type {
+		Normal,
+		Freezing,
+		Frozen,
+		OnFire,
+		Wet,
+		Shocked,
+	};
+}
+
+
 UCLASS(config=Game)
 class ARWBY_CodenameColorsCharacter : public ACharacter
 {
@@ -107,6 +145,10 @@ protected:
 
 	void PerformLedgeTrace(bool CanTrace);
 
+	void PerformWallSlide(bool CanSlide);
+
+	void OnWallSlide();
+
 	void OnLedgeTrace();
 
 	void LedgeGrab();
@@ -156,9 +198,6 @@ protected:
 
 	FTimerHandle TimerHandler_Healing;
 
-	float FallDamageMultiplyer;
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		float MaxAmmo;
 
@@ -200,6 +239,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Trip)
 		bool bFallDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool bCanWallSlide;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Slide)
+		bool bSliding;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		FVector ClimbPosition;
@@ -287,6 +332,10 @@ public:
 
 	UFUNCTION()
 		void OnRep_Trip();
+
+	UFUNCTION()
+		void OnRep_Slide();
+
 	/*Other methods
 	*
 	*
@@ -355,10 +404,14 @@ protected:
 		void SetClimbing_Implementation(bool NewState);
 		bool SetClimbing_Validate(bool NewState);
 
-		UFUNCTION(Server, Reliable, WithValidation)
-		void FallDamage();
-		void FallDamage_Implementation();
-		bool FallDamage_Validate();
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformWallSlide(bool CanSlide);
+		void ServerPerformWallSlide_Implementation(bool CanSlide);
+		bool ServerPerformWallSlide_Validate(bool CanSlide);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformWallJump(bool CanJump);
+		void ServerPerformWallJump_Implementation(bool CanJump);
+		void ServerPerformWallJump_Validate(bool CanJump);
 
 };
