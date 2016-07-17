@@ -210,6 +210,9 @@ void ARWBY_CodenameColorsCharacter::StartJump(){
 		//bHanging = false;
 		
 	}
+	else if (bSliding) {
+		PerformWallJump(true);
+	}
 	else {
 		bPressedJump = true;
 		JumpKeyHoldTime = 0.0f;
@@ -404,6 +407,7 @@ void ARWBY_CodenameColorsCharacter::OnWallSlide() {
 				//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
 				ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.X = 0;
 
+				//ThisPlayer->GetCharacter()->SetActorRotation(ThisPlayer->GetCharacter()->GetActorRotation() * -1);
 
 			}
 		}
@@ -477,11 +481,15 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 			//DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
 
 			if (WallHit) {
+				bCanWallSlide = true;
 				FVector Location = Location + HitOut.Location;
 
 				DrawDebugSphere(GetWorld(), Location, Radius, 10, FColor::Red, false, .01666);
 				//DrawDebugLine(GetWorld(), Start, Location, FColor::Red, false, .01666);
 
+			}
+			else {
+				bCanWallSlide = false;
 			}
 		}
 
@@ -512,7 +520,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 
 				bCanWallSlide = false;
 				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
-				if (HitDown.Distance < 60 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
+				if (HitDown.Distance < 90 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
 
 
 
@@ -548,7 +556,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 
 				}
 				else {
-					bCanWallSlide = true;
+					//bCanWallSlide = true;
 				}
 
 					//if (!bHanging && !bCanClimb)
@@ -598,6 +606,31 @@ void ARWBY_CodenameColorsCharacter::LedgeGrab(){
 
 }
 
+void ARWBY_CodenameColorsCharacter::PerformWallJump(bool CanJump) {
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformWallJump(CanJump);
+	}
+
+	OnWallJump();
+}
+
+void ARWBY_CodenameColorsCharacter::ServerPerformWallJump_Implementation(bool CanJump){
+	PerformWallJump(CanJump);
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerPerformWallJump_Validate(bool CanJump){
+	return true; 
+}
+
+void ARWBY_CodenameColorsCharacter::OnWallJump() {
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.operator+=(FVector(0, ThisPlayer->GetCharacter()->GetActorForwardVector().Y, -1.5) * (750 * -1));
+	}
+
+}
 
 float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) {
 
@@ -1027,7 +1060,7 @@ void ARWBY_CodenameColorsCharacter::OnRep_Slide() {
 
 	if (!bHanging) {
 		bCanWallTrace = true;
-		bCanWallSlide = true;
+		//bCanWallSlide = true;
 		
 		OnWallSlide();
 	}

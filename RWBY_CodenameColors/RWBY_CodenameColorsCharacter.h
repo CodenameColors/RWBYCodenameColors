@@ -34,19 +34,6 @@ namespace EDustType {
 }
 
 UENUM()
-namespace EPoweredState {
-	enum Type {
-		None,
-		FiredUp,
-		IcedUp,
-		GravityUp,
-		ShockedUp,
-		WaterUp,
-	};
-}
-
-
-UENUM()
 namespace ECharacterState {
 	enum Type {
 		Normal,
@@ -55,6 +42,18 @@ namespace ECharacterState {
 		OnFire,
 		Wet,
 		Shocked,
+	};
+}
+
+//UENUM()
+namespace EPoweredUpState {
+	enum Type {
+		None,
+		FiredUp,
+		IcedUp,
+		GravityUp,
+		ShockedUp,
+		WateredUp,
 	};
 }
 
@@ -146,6 +145,10 @@ protected:
 	void PerformLedgeTrace(bool CanTrace);
 
 	void PerformWallSlide(bool CanSlide);
+
+	void PerformWallJump(bool CanJump);
+
+	void OnWallJump();
 
 	void OnWallSlide();
 
@@ -412,6 +415,6 @@ protected:
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerPerformWallJump(bool CanJump);
 		void ServerPerformWallJump_Implementation(bool CanJump);
-		void ServerPerformWallJump_Validate(bool CanJump);
+		bool ServerPerformWallJump_Validate(bool CanJump);
 
 };
