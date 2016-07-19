@@ -23,6 +23,8 @@ public:
 	//this function is called when this pickup has been collected 
 	void WasCollected_Implementation();
 
+	FString GetDustType();
+
 	//Returns the state of the Dust power up
 	UFUNCTION(BlueprintCallable, Category = "Dust_Pickup")
 		bool IsDustActive();
@@ -39,6 +41,8 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* collection;
+
+	FString DustType;
 
 	//
 };

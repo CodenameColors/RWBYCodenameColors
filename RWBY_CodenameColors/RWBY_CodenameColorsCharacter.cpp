@@ -90,6 +90,8 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	bCanClimb = false;
 	bCanWallSlide = false;
 
+	Dust = EDustType::None;
+
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
 
 
@@ -626,6 +628,14 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformWallJump_Validate(bool CanJump)
 void ARWBY_CodenameColorsCharacter::OnWallJump() {
 
 	bWallJumping = true;
+	
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z = -1;
+	}
+	
+	
 	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::ServerAddVelocity, .4367f);
 }
 
@@ -972,9 +982,26 @@ void ARWBY_CodenameColorsCharacter::Collect()
 				if (TestDustPickup) {
 
 						TestDustPickup->WasCollected();
-
+					
 						if (GetNetMode() == NM_Client) {
 							TestDustPickup->WasCollected_Implementation();
+							
+						}
+
+						if(TestDustPickup->GetMesh()->GetMaterial(0)->GetName() == "Electricty"){
+							Dust = EDustType::Electic;
+						}
+						else if (TestDustPickup->GetMesh()->GetMaterial(0)->GetName() == "Fire") {
+							Dust = EDustType::Fire;
+						}
+						else if (TestDustPickup->GetMesh()->GetMaterial(0)->GetName() == "Ground") {
+							Dust = EDustType::Gravity;
+						}
+						else if (TestDustPickup->GetMesh()->GetMaterial(0)->GetName() == "Ice") {
+							Dust = EDustType::Ice;
+						}
+						else if(TestDustPickup->GetMesh()->GetMaterial(0)->GetName() == " Water") {
+							Dust = EDustType::Water;
 						}
 
 						bCanPickupDust = false;
@@ -994,6 +1021,7 @@ void ARWBY_CodenameColorsCharacter::ResetDust() {
 
 	bIsPoweredUp = false;
 	bCanPickupDust = true;
+	Dust = EDustType::None;
 }
 
 /*On_Rep methods

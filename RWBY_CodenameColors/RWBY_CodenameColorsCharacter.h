@@ -45,7 +45,7 @@ namespace ECharacterState {
 	};
 }
 
-//UENUM()
+UENUM()
 namespace EPoweredUpState {
 	enum Type {
 		None,
@@ -192,6 +192,10 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Task)
 		TEnumAsByte<ETask::Type> Task;
+
+	UPROPERTY(EditAnywhere, Replicated)
+		TEnumAsByte<EDustType::Type> Dust;
+
 
 	FTimerHandle TimerHandler_Task;
 

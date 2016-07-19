@@ -61,3 +61,9 @@ void ADustPickup::OnOverlap(class AActor* OtherActor, class UPrimitiveComponent*
 		}
 	}
 }
+
+FString ADustPickup::GetDustType() {
+
+	return "";
+
+}
