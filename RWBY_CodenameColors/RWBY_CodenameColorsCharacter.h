@@ -252,6 +252,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		FVector ClimbPosition;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		bool bWallJumping;
+
+
 	/*
 	static FORCEINLINE bool VTraceSphere(
 		AActor* ActorToIgnore,
@@ -416,5 +420,10 @@ protected:
 		void ServerPerformWallJump(bool CanJump);
 		void ServerPerformWallJump_Implementation(bool CanJump);
 		bool ServerPerformWallJump_Validate(bool CanJump);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerAddVelocity();
+		void ServerAddVelocity_Implementation();
+		bool ServerAddVelocity_Validate();
 
 };

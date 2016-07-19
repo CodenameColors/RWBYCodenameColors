@@ -266,7 +266,7 @@ void ARWBY_CodenameColorsCharacter::OnCrouchEnd(){
 void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 {
 
-	if (bHanging) {
+	if (bHanging || bWallJumping) {
 		return;
 	}
 
@@ -308,7 +308,7 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 {
 
-	if (bHanging) {
+	if (bHanging || bWallJumping) {
 		return;
 	}
 
@@ -400,8 +400,8 @@ void ARWBY_CodenameColorsCharacter::OnWallSlide() {
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 
 	if (ThisPlayer) {
-		if (!bHanging && !bCanClimb) {
-			if (ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -200) {
+		if (!bHanging && !bCanClimb && !bCanClimb) {
+			if (ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -50) {
 				bSliding = true;
 				ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z = -200;
 				//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
@@ -625,11 +625,23 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformWallJump_Validate(bool CanJump)
 
 void ARWBY_CodenameColorsCharacter::OnWallJump() {
 
+	bWallJumping = true;
+	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::ServerAddVelocity, .4367f);
+}
+
+void ARWBY_CodenameColorsCharacter::ServerAddVelocity_Implementation() {
+	
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
-		ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.operator+=(FVector(0, ThisPlayer->GetCharacter()->GetActorForwardVector().Y, -1.5) * (750 * -1));
+		if (bWallJumping) {
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.operator+=(FVector(0, ThisPlayer->GetCharacter()->GetActorForwardVector().Y, -2) * (750 * -1));
+		}
+		bWallJumping = false;
 	}
+}
 
+bool ARWBY_CodenameColorsCharacter::ServerAddVelocity_Validate() {
+	return true;
 }
 
 float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) {
