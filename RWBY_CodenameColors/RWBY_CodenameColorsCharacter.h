@@ -148,6 +148,8 @@ protected:
 
 	void PerformWallJump(bool CanJump);
 
+	void PerformElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds);
+
 	void OnWallJump();
 
 	void OnWallSlide();
@@ -155,6 +157,13 @@ protected:
 	void OnLedgeTrace();
 
 	void LedgeGrab();
+
+	void OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds);
+	void OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds, int FrozenPercent);
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	TArray<TEnumAsByte<ECharacterState::Type>> CharacterStatusEffects;
 
 
 	//Enum used to determine the camera/ movement state of the characters
@@ -193,8 +202,14 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Task)
 		TEnumAsByte<ETask::Type> Task;
 
-	UPROPERTY(EditAnywhere, Replicated)
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Dust)
 		TEnumAsByte<EDustType::Type> Dust;
+	
+	UPROPERTY(EditAnywhere, Replicated)
+		TEnumAsByte<EPoweredUpState::Type> PoweredUpState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+		TEnumAsByte<ECharacterState::Type> CharacterState;
 
 
 	FTimerHandle TimerHandler_Task;
@@ -204,6 +219,10 @@ protected:
 	FTimerHandle PoweredUp;
 
 	FTimerHandle TimerHandler_Healing;
+
+	FTimerHandle FireLength;
+
+	FTimerHandle ShockLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		float MaxAmmo;
@@ -314,6 +333,8 @@ public:
 	//method from the base class AActor, used to take damage. includes damage amount, infomation about the event, and the player of who did this
 	float TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) override;
 
+	float GetShot(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser);
+	
 	//Deal damage
 	void DealDamage(float Damage, FHitResult LineTrace);
 
@@ -430,4 +451,13 @@ protected:
 		void ServerAddVelocity_Implementation();
 		bool ServerAddVelocity_Validate();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds);
+		void ServerPerformElementalDamage_Implementation(ECharacterState::Type CurrentState, float DeltaSeconds);
+		bool ServerPerformElementalDamage_Validate(ECharacterState::Type CurrentState, float DeltaSeconds);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerResetCharacterState();
+		void ServerResetCharacterState_Implementation();
+		bool ServerResetCharacterState_Validate();
 };

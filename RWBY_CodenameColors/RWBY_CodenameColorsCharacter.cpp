@@ -8,6 +8,7 @@
 #include "Pickup.h"
 #include "AmmoPickup.h"
 #include "DustPickup.h"
+#include "Kismet/KismetMathLibrary.h"
 
 ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 
@@ -81,7 +82,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 
 	Perspective = ECameraType::Side;
 
-	Health = 50;
+	Health = 100;
 
 	CurrentAmmo = 5;
 
@@ -91,6 +92,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	bCanWallSlide = false;
 
 	Dust = EDustType::None;
+	CharacterState = ECharacterState::Normal;
 
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
 
@@ -151,8 +153,12 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 
 	if (ThisPlayer) {
-
 	
+		if (CharacterState != ECharacterState::Normal) {
+			PerformElementalDamage(CharacterState, DeltaSeconds);
+		}
+
+
 		if(bCanWallTrace) {
 			PerformLedgeTrace(bCanWallTrace);
 		}
@@ -299,7 +305,7 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 				// get forward vector
 				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 				AddMovementInput(Direction, Value);
-
+				
 			}
 
 			break;
@@ -656,8 +662,8 @@ bool ARWBY_CodenameColorsCharacter::ServerAddVelocity_Validate() {
 
 float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) {
 
-	Health -= DamageAmount;
-	if (Health < 0) {
+	Health -= DamageAmount;  
+	if (Health <= 0) {
 		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 		if (ThisPlayer) {
 			ThisPlayer->OnKilled();
@@ -668,6 +674,64 @@ float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamag
 	OnRep_Health();
 	return DamageAmount;
 }
+float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEvent & DamageEvent, AController * EventInstigator, AActor * DamageCauser) {
+
+	Health -= DamageAmount;
+	if (Health <= 0) {
+		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+		if (ThisPlayer) {
+			ThisPlayer->OnKilled();
+		}
+		Destroy();
+	}
+
+
+	ARWBY_CodenameColorsCharacter * DamageDealer = Cast<ARWBY_CodenameColorsCharacter>(DamageCauser);
+
+	if (DamageDealer) {
+
+		switch (DamageDealer->PoweredUpState) {
+
+		case(EPoweredUpState::FiredUp) :
+			CharacterState = ECharacterState::OnFire;
+
+
+			GetWorldTimerManager().ClearTimer(FireLength);
+			break;
+		case(EPoweredUpState::GravityUp) :
+			CharacterState = ECharacterState::Normal;
+			break;
+		case(EPoweredUpState::IcedUp) :
+			CharacterState = ECharacterState::Freezing;
+			break;
+		case(EPoweredUpState::ShockedUp) :
+			CharacterState = ECharacterState::Shocked;
+			GetWorldTimerManager().ClearTimer(ShockLength);
+			break;
+		case(EPoweredUpState::WateredUp) :
+			CharacterState = ECharacterState::Wet;
+			break;
+		case(EPoweredUpState::None) :
+			CharacterState = ECharacterState::Normal;
+			break;
+
+		}
+	}
+
+	if (CharacterState == ECharacterState::OnFire) {
+	GetWorldTimerManager().SetTimer(FireLength, this, &ARWBY_CodenameColorsCharacter::ServerResetCharacterState, 5);
+}
+	else if (CharacterState == ECharacterState::Shocked) {
+		GetWorldTimerManager().SetTimer(ShockLength, this, &ARWBY_CodenameColorsCharacter::ServerResetCharacterState, 3.5);
+	}
+	else {
+	}
+	
+	//GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);
+	OnRep_Health();
+	return DamageAmount;
+}
+
 
 void ARWBY_CodenameColorsCharacter::DealDamage(float Damage, FHitResult LineTrace) {
 
@@ -748,6 +812,81 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformTask_Validate(ETask::Type NewTa
 	return true;
 }
 
+void ARWBY_CodenameColorsCharacter::PerformElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds) {
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformElementalDamage(CurrentState, DeltaSeconds);
+	}
+
+	OnElementalDamage(CurrentState, DeltaSeconds);
+}
+
+void ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Implementation(ECharacterState::Type CurrentState, float DeltaSeconds) {
+	PerformElementalDamage(CurrentState, DeltaSeconds);
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Validate(ECharacterState::Type CurrentState, float DeltaSeconds) {
+	return true;
+}
+
+void ARWBY_CodenameColorsCharacter::OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds) {
+
+
+
+
+	switch (CurrentState) {
+		case(ECharacterState::OnFire) :
+			Health -= DeltaSeconds *  UKismetMathLibrary::RandomIntegerInRange(2, 5);  
+				OnRep_Health();
+				break;
+		case(ECharacterState::Shocked):
+			Health -= DeltaSeconds *  UKismetMathLibrary::RandomIntegerInRange(0, 3);   
+			OnRep_Health();
+			break;
+
+	}
+
+	if (Health <= 0) {
+		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+		if (ThisPlayer) {
+			ThisPlayer->OnKilled();
+		}
+		Destroy();
+	}
+
+}
+
+void ARWBY_CodenameColorsCharacter::OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds, int FrozenPercent) {
+
+	switch (CurrentState) {
+
+		case(ECharacterState::Freezing) :
+
+			if (Perspective == ECameraType::Side) {
+				GetCharacterMovement()->MaxWalkSpeed = 450 - (450 * (FrozenPercent / 100));
+			}
+			else {
+				GetCharacterMovement()->MaxWalkSpeed = 600 - (600 * (FrozenPercent / 100));
+			}
+			break;
+
+		case(ECharacterState::Frozen) :
+
+			GetCharacterMovement()->MaxWalkSpeed = 0;
+			break;
+	}
+}
+
+
+
+void ARWBY_CodenameColorsCharacter::ServerResetCharacterState_Implementation() {
+	CharacterState = ECharacterState::Normal;
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerResetCharacterState_Validate() {
+	return true;
+}
+
 void ARWBY_CodenameColorsCharacter::OnHeal() {
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, TEXT("HEALING"));
@@ -819,7 +958,32 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 
 				APlayerController* MyController = Cast<APlayerController>(GetController());
 
-				TestCharacter->TakeDamage(100, DamageEvent, MyController, this);
+				if (TestCharacter->CharacterState == ECharacterState::Wet) {
+					if (PoweredUpState == EPoweredUpState::FiredUp){
+
+						TestCharacter->GetShot(20 * .63, DamageEvent, MyController, this);
+						TestCharacter->ServerResetCharacterState();
+					}
+					else if (PoweredUpState == EPoweredUpState::ShockedUp) {
+
+						TestCharacter->GetShot(20 * 1.44, DamageEvent, MyController, this);
+						TestCharacter->ServerResetCharacterState();
+					}
+				}
+
+				else if (TestCharacter->CharacterState == ECharacterState::Shocked) {
+
+					if (PoweredUpState == EPoweredUpState::WateredUp) {
+						TestCharacter->GetShot(20 * 1.44, DamageEvent, MyController, this);
+						TestCharacter->ServerResetCharacterState();
+					}
+					 
+				}
+
+				else {
+					TestCharacter->GetShot(17, DamageEvent, MyController, this);
+				}
+
 
 				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *CameraHit.GetComponent()->GetName());
 			}
@@ -1003,7 +1167,10 @@ void ARWBY_CodenameColorsCharacter::Collect()
 						else if(TestDustPickup->GetMesh()->GetMaterial(0)->GetName() == " Water") {
 							Dust = EDustType::Water;
 						}
-
+						else {
+							return;
+						}
+						OnRep_Dust();
 						bCanPickupDust = false;
 
 				}
@@ -1022,6 +1189,7 @@ void ARWBY_CodenameColorsCharacter::ResetDust() {
 	bIsPoweredUp = false;
 	bCanPickupDust = true;
 	Dust = EDustType::None;
+	PoweredUpState = EPoweredUpState::None;
 }
 
 /*On_Rep methods
@@ -1079,6 +1247,27 @@ void ARWBY_CodenameColorsCharacter::OnRep_Dust() {
 
 	if (!bCanPickupDust) {
 		bIsPoweredUp = true;
+		
+		switch (Dust) {
+			case(EDustType::Fire) :
+				PoweredUpState = EPoweredUpState::FiredUp;
+				break;
+			case(EDustType::Electic) :
+				PoweredUpState = EPoweredUpState::ShockedUp;
+				break;
+			case(EDustType::Gravity) :
+				PoweredUpState = EPoweredUpState::GravityUp;
+				break;
+			case(EDustType::Ice) :
+				PoweredUpState = EPoweredUpState::IcedUp;
+				break;
+			case(EDustType::Water) :
+				PoweredUpState = EPoweredUpState::WateredUp;
+				break;
+			case(EDustType::None) :
+				return;
+		}
+		
 		GetWorldTimerManager().SetTimer(PoweredUp, this, &ARWBY_CodenameColorsCharacter::ResetDust, 5.f);
 	}
 
