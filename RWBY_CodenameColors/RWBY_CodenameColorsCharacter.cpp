@@ -90,9 +90,12 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	bCanWallTrace = false;
 	bCanClimb = false;
 	bCanWallSlide = false;
+	FrozenPercent = 100;
 
 	Dust = EDustType::None;
 	CharacterState = ECharacterState::Normal;
+
+	//CharacterStatusEffects.Add(ECharacterState::Normal);
 
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
 
@@ -154,10 +157,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 
 	if (ThisPlayer) {
 	
-		if (CharacterState != ECharacterState::Normal) {
-			PerformElementalDamage(CharacterState, DeltaSeconds);
-		}
-
+		PerformElementalDamage( DeltaSeconds);
 
 		if(bCanWallTrace) {
 			PerformLedgeTrace(bCanWallTrace);
@@ -676,7 +676,155 @@ float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamag
 }
 float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEvent & DamageEvent, AController * EventInstigator, AActor * DamageCauser) {
 
-	Health -= DamageAmount;
+	//Health -= DamageAmount;
+
+	ARWBY_CodenameColorsCharacter * DamageDealer = Cast<ARWBY_CodenameColorsCharacter>(DamageCauser);
+
+	if (DamageDealer) {
+
+		switch (DamageDealer->PoweredUpState) {
+
+		case(EPoweredUpState::FiredUp) :
+			//CharacterState = ECharacterState::OnFire;
+			if (CharacterStatusEffects.Contains(ECharacterState::Wet)) {
+				CharacterStatusEffects.Remove(ECharacterState::Wet);
+				Health -= DamageAmount * .66;
+				break;
+			}
+			else if (CharacterStatusEffects.Contains(ECharacterState::Freezing)) {
+				CharacterStatusEffects.Remove(ECharacterState::Freezing);
+				Health -= DamageAmount * .7;
+				break;
+			}
+			else if (CharacterStatusEffects.Contains(ECharacterState::Frozen)) {
+				CharacterStatusEffects.Remove(ECharacterState::Frozen);
+				Health -= DamageAmount * .5;
+				break;
+			}
+			else if (CharacterStatusEffects.Contains(ECharacterState::OnFire)) {
+				Health -= DamageAmount;
+				break;
+			}
+				
+			else{
+				CharacterStatusEffects.Add(ECharacterState::OnFire);
+				Health -= DamageAmount;
+				break;
+			}
+			GetWorldTimerManager().ClearTimer(FireLength);
+			break;
+
+		case(EPoweredUpState::GravityUp) :
+			//CharacterState = ECharacterState::Normal;
+			if (CharacterStatusEffects.Contains(ECharacterState::GravityLow)) {
+				Health -= DamageAmount;
+				break;
+			}
+			else {
+				CharacterStatusEffects.Add(ECharacterState::GravityLow);
+				Health -= DamageAmount;
+				break;
+			}
+			GetWorldTimerManager().ClearTimer(GravityLength);
+			break;
+
+		case(EPoweredUpState::IcedUp) :
+			//CharacterState = ECharacterState::Freezing;
+
+			if (CharacterStatusEffects.Contains(ECharacterState::OnFire)) {
+				CharacterStatusEffects.Remove(ECharacterState::OnFire);
+				Health -= DamageAmount * .66;
+				break;
+			}
+			else if (CharacterStatusEffects.Contains(ECharacterState::Wet)) {
+				CharacterStatusEffects.Add(ECharacterState::Freezing);
+				Health -= DamageAmount;
+				FrozenPercent -= DamageAmount * 2;
+				break;
+			}
+			else if (CharacterStatusEffects.Contains(ECharacterState::Freezing) || CharacterStatusEffects.Contains(ECharacterState::Frozen)) {
+				break;
+			}
+
+			else {
+				CharacterStatusEffects.Add(ECharacterState::Freezing);
+				Health -= DamageAmount;
+				FrozenPercent -= DamageAmount*1.5;
+				break;
+			}
+			GetWorldTimerManager().ClearTimer(IceLength);
+			break;
+		case(EPoweredUpState::ShockedUp) :
+			//CharacterState = ECharacterState::Shocked;
+
+			if (CharacterStatusEffects.Contains(ECharacterState::Wet)) {
+				CharacterStatusEffects.Remove(ECharacterState::Wet);
+				Health -= DamageAmount * 1.5;
+				break;
+			}
+			else {
+				CharacterStatusEffects.Add(ECharacterState::Shocked);
+				Health -= DamageAmount;
+				break;
+			}
+			GetWorldTimerManager().ClearTimer(ShockLength);
+			break;
+		case(EPoweredUpState::WateredUp):
+			//CharacterState = ECharacterState::Wet;
+			if (CharacterStatusEffects.Contains(ECharacterState::Shocked)) {
+				CharacterStatusEffects.Remove(ECharacterState::Shocked);
+				Health -= DamageAmount * 1.6;
+				break;
+			}
+			if (CharacterStatusEffects.Contains(ECharacterState::OnFire)) {
+				CharacterStatusEffects.Remove(ECharacterState::OnFire);
+				Health -= DamageAmount * .67;
+				break;
+			}
+			if (CharacterStatusEffects.Contains(ECharacterState::Freezing)) {
+				CharacterStatusEffects.Add(ECharacterState::Wet);
+				Health -= DamageAmount;
+				FrozenPercent -= DamageAmount * 2;
+				break;
+			}
+			else if(CharacterStatusEffects.Contains(ECharacterState::Shocked)){
+				break;
+			}
+			CharacterStatusEffects.Add(ECharacterState::Wet);
+
+			GetWorldTimerManager().ClearTimer(WaterLength);
+			break;
+		case(EPoweredUpState::None) :
+			Health -= DamageAmount;
+			break;
+
+		}
+	}
+
+	FTimerDelegate RemoveState;
+
+	if (CharacterStatusEffects.Contains(ECharacterState::OnFire)) {
+		RemoveState.BindUFunction(this, FName("ServerRemoveCharacterState"), ECharacterState::OnFire);
+		GetWorldTimerManager().SetTimer(FireLength, RemoveState, 5.0f, false);
+	}
+	else if (CharacterStatusEffects.Contains(ECharacterState::Shocked)) {
+		RemoveState.BindUFunction(this, FName("ServerRemoveCharacterState"), ECharacterState::Shocked);
+		GetWorldTimerManager().SetTimer(ShockLength, RemoveState, 3.5f, false);
+	}
+	else if (CharacterStatusEffects.Contains(ECharacterState::Freezing)) {
+		RemoveState.BindUFunction(this, FName("ServerRemoveCharacterState"), ECharacterState::Freezing);
+		GetWorldTimerManager().SetTimer(IceLength, RemoveState, 5.f, false);
+	}
+	else if (CharacterStatusEffects.Contains(ECharacterState::Wet)) {
+		RemoveState.BindUFunction(this, FName("ServerRemoveCharacterState"), ECharacterState::Wet);
+		GetWorldTimerManager().SetTimer(WaterLength, RemoveState, 15.5f, false);
+	}
+	else if (CharacterStatusEffects.Contains(ECharacterState::GravityLow)) {
+		RemoveState.BindUFunction(this, FName("ServerRemoveCharacterState"), ECharacterState::GravityLow);
+		GetWorldTimerManager().SetTimer(GravityLength, RemoveState, 2.1f, false);
+	}
+
+	
 	if (Health <= 0) {
 		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 		if (ThisPlayer) {
@@ -686,52 +834,10 @@ float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEv
 	}
 
 
-	ARWBY_CodenameColorsCharacter * DamageDealer = Cast<ARWBY_CodenameColorsCharacter>(DamageCauser);
-
-	if (DamageDealer) {
-
-		switch (DamageDealer->PoweredUpState) {
-
-		case(EPoweredUpState::FiredUp) :
-			CharacterState = ECharacterState::OnFire;
-
-
-			GetWorldTimerManager().ClearTimer(FireLength);
-			break;
-		case(EPoweredUpState::GravityUp) :
-			CharacterState = ECharacterState::Normal;
-			break;
-		case(EPoweredUpState::IcedUp) :
-			CharacterState = ECharacterState::Freezing;
-			break;
-		case(EPoweredUpState::ShockedUp) :
-			CharacterState = ECharacterState::Shocked;
-			GetWorldTimerManager().ClearTimer(ShockLength);
-			break;
-		case(EPoweredUpState::WateredUp) :
-			CharacterState = ECharacterState::Wet;
-			break;
-		case(EPoweredUpState::None) :
-			CharacterState = ECharacterState::Normal;
-			break;
-
-		}
-	}
-
-	if (CharacterState == ECharacterState::OnFire) {
-	GetWorldTimerManager().SetTimer(FireLength, this, &ARWBY_CodenameColorsCharacter::ServerResetCharacterState, 5);
-}
-	else if (CharacterState == ECharacterState::Shocked) {
-		GetWorldTimerManager().SetTimer(ShockLength, this, &ARWBY_CodenameColorsCharacter::ServerResetCharacterState, 3.5);
-	}
-	else {
-	}
-	
 	//GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);
 	OnRep_Health();
 	return DamageAmount;
 }
-
 
 void ARWBY_CodenameColorsCharacter::DealDamage(float Damage, FHitResult LineTrace) {
 
@@ -812,39 +918,63 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformTask_Validate(ETask::Type NewTa
 	return true;
 }
 
-void ARWBY_CodenameColorsCharacter::PerformElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds) {
+void ARWBY_CodenameColorsCharacter::PerformElementalDamage(float DeltaSeconds) {
 
 	if (GetNetMode() == NM_Client) {
-		ServerPerformElementalDamage(CurrentState, DeltaSeconds);
+		ServerPerformElementalDamage(DeltaSeconds);
 	}
 
-	OnElementalDamage(CurrentState, DeltaSeconds);
+	OnElementalDamage(DeltaSeconds);
 }
 
-void ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Implementation(ECharacterState::Type CurrentState, float DeltaSeconds) {
-	PerformElementalDamage(CurrentState, DeltaSeconds);
+void ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Implementation(float DeltaSeconds) {
+	PerformElementalDamage(DeltaSeconds);
 }
 
-bool ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Validate(ECharacterState::Type CurrentState, float DeltaSeconds) {
+bool ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Validate(float DeltaSeconds) {
 	return true;
 }
 
-void ARWBY_CodenameColorsCharacter::OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds) {
+void ARWBY_CodenameColorsCharacter::OnElementalDamage(float DeltaSeconds) {
 
+	for (int i = 0; i < CharacterStatusEffects.Num(); i++) {
 
+		switch (CharacterStatusEffects[i]) {
 
-
-	switch (CurrentState) {
-		case(ECharacterState::OnFire) :
-			Health -= DeltaSeconds *  UKismetMathLibrary::RandomIntegerInRange(2, 5);  
-				OnRep_Health();
+			case(ECharacterState::Freezing) :
+				if (Perspective == ECameraType::Side) {
+					GetCharacterMovement()->MaxWalkSpeed = 450 - (450 * (FrozenPercent / 100)) * DeltaSeconds;
+				}
+				else {
+					GetCharacterMovement()->MaxWalkSpeed = 600 - (600 * (FrozenPercent / 100)) * DeltaSeconds;
+				}
 				break;
-		case(ECharacterState::Shocked):
-			Health -= DeltaSeconds *  UKismetMathLibrary::RandomIntegerInRange(0, 3);   
-			OnRep_Health();
-			break;
 
+			case(ECharacterState::Frozen) :
+
+				break;
+
+			case(ECharacterState::GravityLow) :
+
+				break;
+
+			case(ECharacterState::OnFire) :
+				Health -= DeltaSeconds *  UKismetMathLibrary::RandomIntegerInRange(2, 5);
+				
+				break;
+
+			case(ECharacterState::Shocked) :
+				Health -= DeltaSeconds *  UKismetMathLibrary::RandomIntegerInRange(1, 3);
+				break;
+
+			case(ECharacterState::Wet) :
+
+				break;
+		
+		}
 	}
+
+	OnRep_Health();
 
 	if (Health <= 0) {
 		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -879,11 +1009,19 @@ void ARWBY_CodenameColorsCharacter::OnElementalDamage(ECharacterState::Type Curr
 
 
 
-void ARWBY_CodenameColorsCharacter::ServerResetCharacterState_Implementation() {
-	CharacterState = ECharacterState::Normal;
+void ARWBY_CodenameColorsCharacter::ServerRemoveCharacterState_Implementation(ECharacterState::Type Target) {
+	
+	//GLog->Log("Target=" + FindObject<UEnum>(ANY_PACKAGE, TEXT("ECharacterState"), true)->GetDisplayNameText(Target));
+
+	CharacterStatusEffects.Remove(Target);
+
+	if (Target == ECharacterState::Freezing) {
+		FrozenPercent = 100;
+	}
+
 }
 
-bool ARWBY_CodenameColorsCharacter::ServerResetCharacterState_Validate() {
+bool ARWBY_CodenameColorsCharacter::ServerRemoveCharacterState_Validate(ECharacterState::Type Target) {
 	return true;
 }
 
@@ -958,31 +1096,9 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 
 				APlayerController* MyController = Cast<APlayerController>(GetController());
 
-				if (TestCharacter->CharacterState == ECharacterState::Wet) {
-					if (PoweredUpState == EPoweredUpState::FiredUp){
+					//Base Damage Dealer
+					TestCharacter->GetShot(20, DamageEvent, MyController, this);
 
-						TestCharacter->GetShot(20 * .63, DamageEvent, MyController, this);
-						TestCharacter->ServerResetCharacterState();
-					}
-					else if (PoweredUpState == EPoweredUpState::ShockedUp) {
-
-						TestCharacter->GetShot(20 * 1.44, DamageEvent, MyController, this);
-						TestCharacter->ServerResetCharacterState();
-					}
-				}
-
-				else if (TestCharacter->CharacterState == ECharacterState::Shocked) {
-
-					if (PoweredUpState == EPoweredUpState::WateredUp) {
-						TestCharacter->GetShot(20 * 1.44, DamageEvent, MyController, this);
-						TestCharacter->ServerResetCharacterState();
-					}
-					 
-				}
-
-				else {
-					TestCharacter->GetShot(17, DamageEvent, MyController, this);
-				}
 
 
 				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *CameraHit.GetComponent()->GetName());
@@ -1168,7 +1284,7 @@ void ARWBY_CodenameColorsCharacter::Collect()
 							Dust = EDustType::Water;
 						}
 						else {
-							return;
+							Dust = EDustType::Water;
 						}
 						OnRep_Dust();
 						bCanPickupDust = false;
@@ -1317,5 +1433,8 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bHanging);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bClimbing);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, ClimbPosition);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, CharacterStatusEffects);
+
+	
 }
 

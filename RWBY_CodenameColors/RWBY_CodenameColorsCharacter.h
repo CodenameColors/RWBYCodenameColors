@@ -36,12 +36,13 @@ namespace EDustType {
 UENUM()
 namespace ECharacterState {
 	enum Type {
-		Normal,
-		Freezing,
-		Frozen,
-		OnFire,
-		Wet,
-		Shocked,
+		Normal		 UMETA(DisplayName = "Normal"),
+		Freezing	 UMETA(DisplayName = "Freezing"),
+		Frozen		 UMETA(DisplayName = "Frozen"),
+		OnFire		 UMETA(DisplayName = "OnFire"),
+		Wet			 UMETA(DisplayName = "Wet"),
+		Shocked		 UMETA(DisplayName = "Shocked"),
+		GravityLow	 UMETA(DisplayName = "GravityLow"),
 	};
 }
 
@@ -148,7 +149,7 @@ protected:
 
 	void PerformWallJump(bool CanJump);
 
-	void PerformElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds);
+	void PerformElementalDamage(float DeltaSeconds);
 
 	void OnWallJump();
 
@@ -158,13 +159,15 @@ protected:
 
 	void LedgeGrab();
 
-	void OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds);
+	void OnElementalDamage(float DeltaSeconds);
 	void OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds, int FrozenPercent);
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	TArray<TEnumAsByte<ECharacterState::Type>> CharacterStatusEffects;
 
+	UPROPERTY(EditAnywhere)
+	int16 FrozenPercent;
 
 	//Enum used to determine the camera/ movement state of the characters
 	ECameraType::Type Perspective;
@@ -223,6 +226,12 @@ protected:
 	FTimerHandle FireLength;
 
 	FTimerHandle ShockLength;
+
+	FTimerHandle IceLength;
+
+	FTimerHandle GravityLength;
+
+	FTimerHandle WaterLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		float MaxAmmo;
@@ -452,12 +461,12 @@ protected:
 		bool ServerAddVelocity_Validate();
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerPerformElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds);
-		void ServerPerformElementalDamage_Implementation(ECharacterState::Type CurrentState, float DeltaSeconds);
-		bool ServerPerformElementalDamage_Validate(ECharacterState::Type CurrentState, float DeltaSeconds);
+		void ServerPerformElementalDamage(float DeltaSeconds);
+		void ServerPerformElementalDamage_Implementation(float DeltaSeconds);
+		bool ServerPerformElementalDamage_Validate(float DeltaSeconds);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerResetCharacterState();
-		void ServerResetCharacterState_Implementation();
-		bool ServerResetCharacterState_Validate();
+		void ServerRemoveCharacterState(ECharacterState::Type Target);
+		void ServerRemoveCharacterState_Implementation(ECharacterState::Type Target);
+		bool ServerRemoveCharacterState_Validate(ECharacterState::Type Target);
 };
