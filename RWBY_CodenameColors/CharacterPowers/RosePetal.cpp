@@ -61,6 +61,8 @@ void ARosePetal::Tick( float DeltaTime )
 
 		UKismetSystemLibrary::MoveComponentTo(PetalMesh, Character, Rot, false, false, .35f, EMoveComponentAction::Move, LatentInfo);
 	}
+	//Force
+
 	
 }
 
