@@ -114,7 +114,7 @@ protected:
 	//method used to fire from the center of the camera (screen)
 	void OnFire();
 
-	void OnDodge();
+	virtual void OnDodge();
 
 	void OnHeal();
 
@@ -129,14 +129,14 @@ protected:
 	void StopShooting();
 
 	//method used to start dodging
-	void StartDodging();
+	virtual void StartDodging();
 
 	//method used to stop doding
-	void StopDodging();
+	virtual void StopDodging();
 
 	void PerformHealing(bool Healing);
 
-	void PerformDodge(bool bDodge);
+	virtual void PerformDodge(bool bDodge);
 
 	//method used to preform tasks (Client)
 	void PerformTask(ETask::Type NewTask);
@@ -159,12 +159,15 @@ protected:
 
 	void LedgeGrab();
 
+	//returns true while in the middle of a dodge
+	UPROPERTY(BlueprintReadWrite, Replicated)
+	bool WhileDodging;
+
 	void OnElementalDamage(float DeltaSeconds);
 	void OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds, int FrozenPercent);
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
-	TArray<TEnumAsByte<ECharacterState::Type>> CharacterStatusEffects;
+	UPROPERTY(EditAnywhere)
+	TArray<float> DownwardVelocity;
 
 	UPROPERTY(EditAnywhere)
 	int16 FrozenPercent;
@@ -202,6 +205,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing=OnRep_Health)
 		float Health;
 
+	bool bFalling;
+
+
 	UPROPERTY(ReplicatedUsing = OnRep_Task)
 		TEnumAsByte<ETask::Type> Task;
 
@@ -222,16 +228,6 @@ protected:
 	FTimerHandle PoweredUp;
 
 	FTimerHandle TimerHandler_Healing;
-
-	FTimerHandle FireLength;
-
-	FTimerHandle ShockLength;
-
-	FTimerHandle IceLength;
-
-	FTimerHandle GravityLength;
-
-	FTimerHandle WaterLength;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		float MaxAmmo;
@@ -287,7 +283,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		bool bWallJumping;
 
-
 	/*
 	static FORCEINLINE bool VTraceSphere(
 		AActor* ActorToIgnore,
@@ -327,6 +322,27 @@ protected:
 	
 public:
 	ARWBY_CodenameColorsCharacter();
+
+	TArray<TEnumAsByte<ECharacterState::Type>> GetStatusEffects();//const { return CharacterStatusEffects; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	TArray<TEnumAsByte<ECharacterState::Type>> CharacterStatusEffects;
+
+	FTimerHandle FireLength;
+
+	FTimerHandle ShockLength;
+
+	FTimerHandle IceLength;
+
+	FTimerHandle GravityLength;
+
+	FTimerHandle WaterLength;
+
+	void SetFrozenPercent(int16 NewAmount);
+
+	int16 GetFrozenPercent();
+
+	void RemoveStateWithDelay();
 
 	//void OnBeginOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 
@@ -416,9 +432,9 @@ protected:
 		bool ServerPerformTask_Validate(ETask::Type NewTask);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerPerformDodge(bool bDodging);
-		void ServerPerformDodge_Implementation(bool bDodging);
-		bool ServerPerformDodge_Validate(bool bDodging);
+		 void ServerPerformDodge(bool bDodging);
+		 void ServerPerformDodge_Implementation(bool bDodging);
+		 bool ServerPerformDodge_Validate(bool bDodging);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerPerformUseDust( );

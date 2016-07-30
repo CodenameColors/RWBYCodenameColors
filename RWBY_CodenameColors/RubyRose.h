@@ -17,6 +17,8 @@ public:
 
 	ARubyRose();
 
+	void Tick(float DeltaSeconds) override;
+
 protected:
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
@@ -40,6 +42,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Category = "RWBYCharacter", Replicated)
 		bool bCanDamageSameActor;
 
+private:
+
+	void OnDodge() override;
+
+	void StartDodging() override;
+
+	void StopDodging() override;
+
+	void PerformDodge(bool bDodge) override;
+
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose")
+	TSubclassOf<class ARosePetal> RosePetal;
+	 
+	void Spawn(FVector SpawnLocation);
+
+	FTimerHandle PetalSpawnDelay;
+
 
 //***** ON REP FUNCTIONS*****\\
 
@@ -48,12 +67,16 @@ public:
 	UFUNCTION()
 	void OnRep_Attack();
 
-protected:
+public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerPerformAttack();
 		void ServerPerformAttack_Implementation();
 		bool ServerPerformAttack_Validate();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformDodge(bool bDodging) ;
+		void ServerPerformDodge_Implementation(bool bDodging) ;
+		bool ServerPerformDodge_Validate(bool bDodging) ;
 
 };
