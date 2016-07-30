@@ -80,7 +80,6 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	GetCharacterMovement()->MaxFlySpeed = 600.f;
 
 
-	//Setting default values
 	Perspective = ECameraType::Side;
 
 	Health = 100;
@@ -122,8 +121,8 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 	InputComponent->BindAction("Shoot", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
 	InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
 
-	//InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
-	//InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
+	InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
+	InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
 
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::OnCrouchStart);
 	InputComponent->BindAction("Crouch", IE_Released, this, &ARWBY_CodenameColorsCharacter::OnCrouchEnd);
@@ -158,45 +157,20 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 
 	if (ThisPlayer) {
 	
-		//Deal Damage over time, or slow character depending on thier current status effects
 		PerformElementalDamage( DeltaSeconds);
 
-		//Checks if there has been a wall detected, and if so then runs the method
 		if(bCanWallTrace) {
-			//Runs a Ray Trace to see if the correct type of wall has been encountered
 			PerformLedgeTrace(bCanWallTrace);
 		}
 
-		//checks to see if the character can wall slide
 		if (bCanWallSlide) {
-			//if so then runs this wall slide method
 			PerformWallSlide(bCanWallSlide);
 		}
 
-		//checks to see if the character has a position to climb to
 		if (bCanClimb) {
-			//if so then climb/ run this method
 			LedgeGrab();
 		}
 
-		if (ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling() && ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -2200) {
-			bFalling = true;
-			DownwardVelocity.Add(ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z);
-		}
-
-		if (!ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling() && bFalling) {
-			if (DownwardVelocity.Num() > 0) {
-				Health -= DownwardVelocity.Last() / -130;
-				DownwardVelocity.Empty();
-				OnRep_Health();
-				bFalling = false;
-				bFallDamage = true;
-			}
-		}
-
-		
-
-		//once your character is done climbing you need to reset all variables assoicated with climbing
 		if (bDoneClimbing) {
 
 			bDoneClimbing = false;
@@ -233,18 +207,17 @@ void ARWBY_CodenameColorsCharacter::MoveCharacter( ){
 
 void ARWBY_CodenameColorsCharacter::StartJump(){
 	
-	//can climb is checked for, aka is there a viable position to climb too
-	if (bCanClimb) {
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Space Pressed"));
 
-		//if a viable position has been found then set the climbing variable to true
+
+	if (bCanClimb) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Space Pressed"));
+
 		SetClimbing(true);
 
 		//bCanClimb = false;
 		//bHanging = false;
 		
 	}
-	//slide if can't clumb at the current moment
 	else if (bSliding) {
 		PerformWallJump(true);
 	}
@@ -255,16 +228,13 @@ void ARWBY_CodenameColorsCharacter::StartJump(){
 
 }
 
-//This method is used in order to repilcate the state of the climbing variable accross the Server, and clients
 void ARWBY_CodenameColorsCharacter::SetClimbing_Implementation(bool NewState){
 	bClimbing = NewState;
 }
 
-//This method allows the method above to occur multiplayer wise
 bool ARWBY_CodenameColorsCharacter::SetClimbing_Validate(bool NewState){
 	return true;
 }
-
 
 void ARWBY_CodenameColorsCharacter::StopJump() {
 
@@ -274,7 +244,7 @@ void ARWBY_CodenameColorsCharacter::StopJump() {
 	JumpKeyHoldTime = 0.0f;
 }
 
-//This method allows the player to crouch, or let go of a ledge (Multiplayer)
+
 void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -289,7 +259,7 @@ void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 	
 
 }
-//This method allows the method above to occur multiplayer wise
+
 bool ARWBY_CodenameColorsCharacter::OnCrouchStart_Validate() {
 	return true;
 }
@@ -308,13 +278,10 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 		return;
 	}
 
-	//Checks to see what camera the player is current using
 	switch (Perspective) {
 		case(ECameraType::None) :
 			return;
-
-			//if its the side camera, set the forward to null, and then set max walk speed to be slower
-			// than that of the third person
+			break;
 		case(ECameraType::Side) :
 
 			if ((Controller != NULL) && (Value != 0.0f))
@@ -324,7 +291,6 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 
 			}
 			break;
-
 		case(ECameraType::Third) :
 
 			if ((Controller != NULL) && (Value != 0.0f))
@@ -341,7 +307,9 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 				AddMovementInput(Direction, Value);
 				
 			}
+
 			break;
+
 		}
 }
 
@@ -352,16 +320,14 @@ void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 		return;
 	}
 
-	//Checks to see what camera the player is currently using
 	switch (Perspective){
 		case(ECameraType::None) :
 			return;
-			//if its the side camera, find the Global right vector, and use it
+			
 		case(ECameraType::Side):
 			AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
 			break;
-			//if its the third person camera find the right vector
-			//in respect to the Capsule
+
 		case(ECameraType::Third):
 
 			if (true) {
@@ -398,7 +364,6 @@ void ARWBY_CodenameColorsCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-//This method will allow the player to switch cameras
 void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
 	switch(Perspective){
@@ -419,29 +384,25 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
 }
 
-//This Method is used to perform a wall slide on the server
 void ARWBY_CodenameColorsCharacter::PerformWallSlide(bool CanSlide) {
 
-	//Check to see if the player is a client
 	if (GetNetMode() == NM_Client) {
-		//if so then run this method on the server
 		ServerPerformWallSlide(CanSlide);
 	}
-	//call the slide method, which will replicate across all clients on the server
+
+	//bSliding = true;
+
 	OnRep_Slide();
 }
 
-//This method allows the clients to wall slide via the server
 void ARWBY_CodenameColorsCharacter::ServerPerformWallSlide_Implementation(bool CanSlide) {
 	PerformWallSlide(CanSlide);
 }
 
-//This method allows the method above to occur multiplayer wise
 bool ARWBY_CodenameColorsCharacter::ServerPerformWallSlide_Validate(bool CanSlide) {
 	return true;
 }
 
-//This the method that performs the wall sliding on the characters
 void ARWBY_CodenameColorsCharacter::OnWallSlide() {
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -462,34 +423,27 @@ void ARWBY_CodenameColorsCharacter::OnWallSlide() {
 
 }
 
-//This Method is used to perform a wall slide on the server
 void ARWBY_CodenameColorsCharacter::PerformLedgeTrace(bool CanTrace) {
 
-	//Check to see if the player is a client
 	if (GetNetMode() == NM_Client) {
-		//call the slide method, which will replicate across all clients on the server
 		ServerPerformLedgeTrace(CanTrace);
 	}
-	//Set the state
+
 	bCanWallTrace = true;
 
-	//Replicate the state accross the clients
 	OnRep_Ledge();
 }
 
-//This method allows the clients to wall slide via the server
 void ARWBY_CodenameColorsCharacter::ServerPerformLedgeTrace_Implementation(bool CanTrace) {
 
 	PerformLedgeTrace(CanTrace);
 }
 
-//This method allows the method above to occur multiplayer wise
 bool ARWBY_CodenameColorsCharacter::ServerPerformLedgeTrace_Validate(bool CanTrace) {
 	return true;
 }
 
-//This method performs two ray traces from the character to see if the character
-//has colided with the correct world static object
+
 void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 
 
@@ -500,25 +454,18 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 	}
 
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Silver, TEXT("WALL DETECTED"));
-		
-	//Find the Location of this socket, aka the Middle of the character
-		const FVector Location = GetMesh()->GetSocketLocation(FName("Hip"));
-		
-		AActor* ActorToIgnore = this; //ignore overlap events with ourself
-		 //Find the Location of this socket, aka the Middle of the character
+
+	const FVector Location = GetMesh()->GetSocketLocation(FName("Hip"));
+
+		AActor* ActorToIgnore = this;
 		const FVector Start = GetMesh()->GetSocketLocation(FName("Hip"));
-		//Create a vector, and set that vector equal to
-		//the middle of the character + Some other forward direction vector
 		const FVector End = Location + ThisPlayer->GetCharacter()->GetActorForwardVector() * 150;
-		//Set the the sphere trace radius
 		const float Radius = 20;
 
 		//const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("test"));
 		//gets the beginning socket
 		
-		//create a HitReResult
 		FHitResult HitOut;
-		//Makes the Ray Trace use our custom Colision Channel
 		ECollisionChannel TraceChannel = ECC_EngineTraceChannel1;
 
 
@@ -536,21 +483,17 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 		//Get World Source
 		TObjectIterator<AMyPlayerController> ThePC;
 		if (ThePC) {
-			//Set a bool to the state of the sphereTrace
-			bool WallHit = ThePC->GetWorld()->SweepSingle(HitOut, Start, End, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
-			//DEBUG PURPOSE UNCOMMENT IF NEED BE
-			DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Red, false, .01666);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
 
-			//Check to see if the Ray Trace hit something/ Sphere Trace
+			bool WallHit = ThePC->GetWorld()->SweepSingle(HitOut, Start, End, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
+			DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Red, false, .01666);
+			//DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
+
 			if (WallHit) {
-				//If then we can slide down it
 				bCanWallSlide = true;
-				//Reseting the start location to be that of the end hit location
 				FVector Location = Location + HitOut.Location;
-				//DEBUG PURPOSE UNCOMMENT IF NEED BE
+
 				DrawDebugSphere(GetWorld(), Location, Radius, 10, FColor::Red, false, .01666);
-				DrawDebugLine(GetWorld(), Start, Location, FColor::Red, false, .01666);
+				//DrawDebugLine(GetWorld(), Start, Location, FColor::Red, false, .01666);
 
 			}
 			else {
@@ -560,15 +503,15 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 
 		//TRACE DOWN
 
-		//Find the middle location of the character's forward offset
+		
 		const FVector LocationDown = GetMesh()->GetSocketLocation(FName("Hip1"));
 
-		//Use the Forward offset location and create a vector 150 units up from it
 		const FVector DownStart = ThisPlayer->GetCharacter()->GetActorUpVector() *150+ LocationDown;
-		//Then just set end location to the the character forward offset
 		const FVector EndDown = Location;
 
-		//Create a new FHitResult
+		//const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("test"));
+		//gets the beginning socket
+
 		FHitResult HitDown;
 		FCollisionObjectQueryParams CamObjectQueryParams;
 
@@ -576,62 +519,50 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 		HitDown = FHitResult(ForceInit);
 
 		if (ThePC) {
-			//Set a bool to the state of the ray trace
+
 			bool WallHit = ThePC->GetWorld()->LineTraceSingle(HitDown, DownStart, LocationDown, TraceParams, CamObjectQueryParams);
-			//DEBUG PURPOSE UNCOMMENT IF NEED BE
 			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
 			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
 
-			//Check to see if the Ray Trace hit something
 			if (WallHit) {
 
 				bCanWallSlide = false;
-				//Sets the final location of the character's climb
 				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
+				if (HitDown.Distance < 90 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
 
-				//Checks to see how far the character is from the/ climb location
-				if (HitDown.Distance > 90 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
 
-					//DEBUGS
+
 					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .01666);
 					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .01666);
-
-					//If we have found a suitable end climbing position set
-					// set the character to be able to climb, also stop ray tracing
 					bCanClimb = true;
 					bCanWallTrace = false;
-
-					//Creating a location to set the character location to, This is an offset of the final location
-					// and there the character wil hang off the edge
 					FVector LocationOffset = FVector(DownStart.X, DownStart.Y - ThisPlayer->GetCharacter()->GetActorForwardVector().Y,
 						DownStart.Z - ThisPlayer->GetCharacter()->GetActorUpVector().Z * 130);
+
 					LocationOffset -= ThisPlayer->GetCharacter()->GetActorForwardVector() * 50;
 
-					//Once the player has reached this position set their movement mode to flying
-					// This will negate Gravity and create a hanging effect
-					ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-					//Get Character Rotation
+					//LocationOffset.Z = LocationOffset.Z -130;
 
-					//Set the Character Characters location to the Location offset
-					ThisPlayer->GetCharacter()->SetActorLocation(LocationOffset, false, false);
-					
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+
 					FRotator Forward = ThisPlayer->GetCharacter()->GetActorRotation();
 
-					// Once your character has reached the hanging position then STOP THEIR MOMENTUM NOW
+					ThisPlayer->GetCharacter()->SetActorLocation(LocationOffset, false, false);
+
+					//GetCapsuleComponent()->MoveComponent(FVector(1,0,0), FQuat(), false, false, EMoveComponentFlags::MOVECOMP_NoFlags, ETeleportType::TeleportPhysics );
 					ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
 
-					//At this point set the hanging variable to true in order to tell the anim blueprint to
-					// run the haning animation
 					bHanging = true;
-					//Since you are hanging you can climb, so set climbing to try
 					bCanClimb = true;
 					ClimbPosition = DownStart + ThisPlayer->GetCharacter()->GetActorUpVector() * 90;
 
 					//bClimbing = true;
-					
+					;
 				}
 
-		
+				else if (HitDown.Distance > 60 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
+
+				}
 				else {
 					//bCanWallSlide = true;
 				}
@@ -671,18 +602,6 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 		}
 }
 
-int16 ARWBY_CodenameColorsCharacter::GetFrozenPercent() {
-	return FrozenPercent;
-}
-
-void ARWBY_CodenameColorsCharacter::SetFrozenPercent(int16 NewAmount) {
-	FrozenPercent -= NewAmount;
-}
-
-TArray<TEnumAsByte<ECharacterState::Type>> ARWBY_CodenameColorsCharacter::GetStatusEffects() {
-	return CharacterStatusEffects;
-}
-
 void ARWBY_CodenameColorsCharacter::LedgeGrab(){
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -694,7 +613,6 @@ void ARWBY_CodenameColorsCharacter::LedgeGrab(){
 	//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
 }
-
 
 void ARWBY_CodenameColorsCharacter::PerformWallJump(bool CanJump) {
 
@@ -869,10 +787,6 @@ float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEv
 				FrozenPercent -= DamageAmount * 2;
 				break;
 			}
-			if (CharacterStatusEffects.Contains(ECharacterState::Wet)) {
-				Health -= DamageAmount;
-				break;
-			}
 			else if(CharacterStatusEffects.Contains(ECharacterState::Shocked)){
 				break;
 			}
@@ -886,26 +800,6 @@ float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEv
 
 		}
 	}
-
-	FTimerDelegate RemoveState;
-
-	RemoveStateWithDelay();
-
-	if (Health <= 0) {
-		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
-		if (ThisPlayer) {
-			ThisPlayer->OnKilled();
-		}
-		Destroy();
-	}
-
-
-	//GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);
-	OnRep_Health();
-	return DamageAmount;
-}
-
-void ARWBY_CodenameColorsCharacter::RemoveStateWithDelay() {
 
 	FTimerDelegate RemoveState;
 
@@ -927,10 +821,22 @@ void ARWBY_CodenameColorsCharacter::RemoveStateWithDelay() {
 	}
 	else if (CharacterStatusEffects.Contains(ECharacterState::GravityLow)) {
 		RemoveState.BindUFunction(this, FName("ServerRemoveCharacterState"), ECharacterState::GravityLow);
-		GetWorldTimerManager().SetTimer(GravityLength, RemoveState, 2.5f, false);
-
+		GetWorldTimerManager().SetTimer(GravityLength, RemoveState, 2.1f, false);
 	}
 
+	
+	if (Health <= 0) {
+		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+		if (ThisPlayer) {
+			ThisPlayer->OnKilled();
+		}
+		Destroy();
+	}
+
+
+	//GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);
+	OnRep_Health();
+	return DamageAmount;
 }
 
 void ARWBY_CodenameColorsCharacter::DealDamage(float Damage, FHitResult LineTrace) {
@@ -1032,17 +938,15 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Validate(float 
 void ARWBY_CodenameColorsCharacter::OnElementalDamage(float DeltaSeconds) {
 
 	for (int i = 0; i < CharacterStatusEffects.Num(); i++) {
-		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
 		switch (CharacterStatusEffects[i]) {
 
 			case(ECharacterState::Freezing) :
-				//AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 				if (Perspective == ECameraType::Side) {
-					ThisPlayer->GetCharacter()->GetCharacterMovement()->MaxWalkSpeed = 600 - (600 * (FrozenPercent / 100)) * DeltaSeconds;
-					//GetCharacterMovement()->MaxWalkSpeed = 450 - (450 * (FrozenPercent / 100)) * DeltaSeconds;
+					GetCharacterMovement()->MaxWalkSpeed = 450 - (450 * (FrozenPercent / 100)) * DeltaSeconds;
 				}
 				else {
-					ThisPlayer->GetCharacter()->GetCharacterMovement()->MaxWalkSpeed = 600 - (600 * (FrozenPercent / 100)) * DeltaSeconds;
+					GetCharacterMovement()->MaxWalkSpeed = 600 - (600 * (FrozenPercent / 100)) * DeltaSeconds;
 				}
 				break;
 
@@ -1530,7 +1434,7 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bClimbing);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, ClimbPosition);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, CharacterStatusEffects);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, WhileDodging);
+
 	
 }
 
