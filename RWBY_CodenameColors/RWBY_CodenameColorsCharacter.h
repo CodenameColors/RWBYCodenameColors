@@ -282,12 +282,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
 	int32 Semblance;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_MeleeAttack)
-	bool bMeleeAttacking;
-	
+
 public:
 	ARWBY_CodenameColorsCharacter();
+
+	AActor* LastHitActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	TEnumAsByte<EPoweredUpState::Type> PoweredUpState;
@@ -306,6 +305,9 @@ public:
 	FTimerHandle GravityLength;
 
 	FTimerHandle WaterLength;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_MeleeAttack)
+		bool bMeleeAttacking;
 
 	void SetFrozenPercent(int16 NewAmount);
 

@@ -96,6 +96,8 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	Dust = EDustType::None;
 	CharacterState = ECharacterState::Normal;
 
+	LastHitActor = nullptr;
+
 	//CharacterStatusEffects.Add(ECharacterState::Normal);
 
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
@@ -1175,7 +1177,7 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 
 	if (CamHitSuccess) {
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
-		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 255, 0), true);
+		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 255, 0), true, 1);
 
 		UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
 
@@ -1190,7 +1192,7 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 			//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
 			if (TestCharacter) {
 
-				DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(255, 0, 0), true);
+				DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(255, 0, 0), true, 1 );
 
 				TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 				FDamageEvent DamageEvent(ValidDamageTypeClass);
@@ -1208,7 +1210,7 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 
 	}
 	else {
-		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 0, 225), true);
+		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 0, 225), true, 1);
 	}
 
 	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);

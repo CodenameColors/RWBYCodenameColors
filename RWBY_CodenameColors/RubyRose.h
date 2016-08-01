@@ -19,6 +19,9 @@ public:
 
 	void Tick(float DeltaSeconds) override;
 
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* Melee;
+
 protected:
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
@@ -59,9 +62,7 @@ private:
 
 	FTimerHandle Attack;
 
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-	UAnimMontage* Melee;
-
+	//void setStupid(class ARWBY_CodenameColorsCharacter* EPoweredUpState::Type);
 
 //***** ON REP FUNCTIONS*****\\
 

@@ -200,13 +200,26 @@ void ARubyRose::OnAttack(){
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Attack Pressed"));
 
 		//DEBUGING
-		DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, true, .166f);
+		DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Blue, true, 1);
 
 		bool MeleeHitResult = GetWorld()->LineTraceSingle(MeleeAttackHitResult, StartLocation, EndLocation, ColliParams, Query);
 
 		if (MeleeHitResult) {
 
-			DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, true, .166f);
+			DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, true, 1);
+			ARWBY_CodenameColorsCharacter* HitChar = Cast<ARWBY_CodenameColorsCharacter>(MeleeAttackHitResult.GetActor());
+
+			if (HitChar) {
+				DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, true, 1);
+
+				if (LastHitActor != HitChar) {
+					DealDamage(10, MeleeAttackHitResult);
+					LastHitActor = HitChar;
+				}
+				
+				//Take
+			}
+			
 			
 		}
 
@@ -238,17 +251,10 @@ void ARubyRose::OnRep_MeleeAttack() {
 	}
 	else {
 		GetMesh()->GetAnimInstance()->Montage_Play(Melee, 1);
-
-		if (bMeleeAttacking && bCanDealAttackDamage) {
-			GetMesh()->GetAnimInstance()->Montage_JumpToSection(FName("Attack End"), Melee);
-		}
-
 	}
 
 	OnAttack();
 }
-
-
 
 void ARubyRose::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const {
 
