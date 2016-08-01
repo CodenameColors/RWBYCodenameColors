@@ -217,7 +217,7 @@ void ARubyRose::OnAttack(){
 					LastHitActor = HitChar;
 				}
 				
-				//Take
+				
 			}
 			
 			
