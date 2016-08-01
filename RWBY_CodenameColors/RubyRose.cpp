@@ -30,6 +30,9 @@ void ARubyRose::Tick(float DeltaSeconds) {
 		//Spawn(SpawnLocation);
 	}
 
+	if (bCanDealAttackDamage) {
+		OnAttack();
+	}
 	//OnAttack();
 
 }
@@ -131,7 +134,7 @@ void ARubyRose::OnDodge(){
 
 void ARubyRose::StartAttack_Implementation(){
 
-	//bMeleeAttacking = true;
+	bMeleeAttacking = true;
 	PerformAttack(true);
 
 }
@@ -143,7 +146,7 @@ bool ARubyRose::StartAttack_Validate() {
 
 void ARubyRose::StopAttack_Implementation(){
 
-	//bMeleeAttacking = false;
+	bMeleeAttacking = false;
 	PerformAttack(false);
 
 	FTimerDelegate AttackState;
@@ -194,17 +197,17 @@ void ARubyRose::OnAttack(){
 		//you should not be allowed to hit your self
 		ColliParams.AddIgnoredActor(this);
 
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Attack Pressed"));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Attack Pressed"));
 
 		//DEBUGING
-		DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, true, 2);
+		DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, true, .166f);
 
 		bool MeleeHitResult = GetWorld()->LineTraceSingle(MeleeAttackHitResult, StartLocation, EndLocation, ColliParams, Query);
 
 		if (MeleeHitResult) {
 
-			DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, true, .03f);
-
+			DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, true, .166f);
+			
 		}
 
 	}
@@ -230,6 +233,18 @@ void ARubyRose::SetAttackingBool(bool NewBoolState) {
 
 void ARubyRose::OnRep_MeleeAttack() {
 	
+	if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
+		
+	}
+	else {
+		GetMesh()->GetAnimInstance()->Montage_Play(Melee, 1);
+
+		if (bMeleeAttacking && bCanDealAttackDamage) {
+			GetMesh()->GetAnimInstance()->Montage_JumpToSection(FName("Attack End"), Melee);
+		}
+
+	}
+
 	OnAttack();
 }
 
@@ -238,4 +253,9 @@ void ARubyRose::OnRep_MeleeAttack() {
 void ARubyRose::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const {
 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ARubyRose, bCanDealAttackDamage);
+	DOREPLIFETIME(ARubyRose, Melee);
+
+	
 }

@@ -59,6 +59,10 @@ private:
 
 	FTimerHandle Attack;
 
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+	UAnimMontage* Melee;
+
+
 //***** ON REP FUNCTIONS*****\\
 
 public:
