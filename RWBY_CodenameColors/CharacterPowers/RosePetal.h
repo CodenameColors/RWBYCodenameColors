@@ -23,6 +23,7 @@ public:
 public:
 
 	//Sets the material of the mesh
+	UFUNCTION(BlueprintCallable, Category = "RosePetal")
 	void SetPetalMaterial(FString Material);
 
 	//Finds and follows the character for a limited time
@@ -73,5 +74,7 @@ private:
 	UFUNCTION()
 	void RoseOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RosePetal", meta = (AllowPrivateAccess = "true"), Replicated)
+	FString MaterialChoice;
 
 };

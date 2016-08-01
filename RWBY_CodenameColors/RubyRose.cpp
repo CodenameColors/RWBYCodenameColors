@@ -5,6 +5,7 @@
 #include "UnrealNetwork.h"
 #include "CharacterPowers/RosePetal.h"
 #include "MyPlayerController.h"
+#include "DrawDebugHelpers.h"
 
 //Sets the default values of this class
 ARubyRose::ARubyRose() {
@@ -29,6 +30,8 @@ void ARubyRose::Tick(float DeltaSeconds) {
 		//Spawn(SpawnLocation);
 	}
 
+	//OnAttack();
+
 }
 
 void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent){
@@ -37,6 +40,9 @@ void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ARubyRose::StartDodging);
 	InputComponent->BindAction("Dodge", IE_Released, this, &ARubyRose::StopDodging);
+
+	InputComponent->BindAction("MeleeAttack", IE_Pressed, this, &ARubyRose::StartAttack);
+	InputComponent->BindAction("MeleeAttack", IE_Released, this, &ARubyRose::StopAttack);
 
 }
 
@@ -90,7 +96,6 @@ void ARubyRose::Spawn(FVector SpawnLocation){
 	}
 }
 
-
 void ARubyRose::PerformDodge(bool bDodging){
 	
 	Super::PerformDodge(bDodging);
@@ -124,35 +129,111 @@ void ARubyRose::OnDodge(){
 
 }
 
-void ARubyRose::StartAttack(){
+void ARubyRose::StartAttack_Implementation(){
+
+	//bMeleeAttacking = true;
+	PerformAttack(true);
 
 }
 
-void ARubyRose::StopAttack(){
 
+bool ARubyRose::StartAttack_Validate() {
+	return true;
 }
 
-void ARubyRose::PerformAttack(){
+void ARubyRose::StopAttack_Implementation(){
+
+	//bMeleeAttacking = false;
+	PerformAttack(false);
+
+	FTimerDelegate AttackState;
+	
+
+	//AttackState.BindUFunction(this, FName("SetAttackingBool"), false);
+	//GetWorldTimerManager().SetTimer(Attack, AttackState, 1.23f, false);
+}
+
+bool ARubyRose::StopAttack_Validate() {
+	return true;
+}
+
+
+void ARubyRose::PerformAttack(bool ShouldAttack){
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformAttack(ShouldAttack);
+		return;
+	}
+
+	bMeleeAttacking = ShouldAttack;
+
+	OnRep_MeleeAttack();
 
 }
 
 void ARubyRose::OnAttack(){
 
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
+	//gets the socket 
+	const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("AttackSocketEnd"));
+
+	const FVector StartLocation = GetMesh()->GetSocketLocation(FName("AttackSocketBeginning"));
+	const FVector EndLocation = GetMesh()->GetSocketLocation(FName("AttackSocketEnd"));
+
+	
+
+	if (MeleeSocket) {
+
+		//Create Melee Attack Hit Result
+		FHitResult MeleeAttackHitResult;
+		//creates the Hit Parameters
+		FCollisionQueryParams ColliParams;
+		//create the object query 
+		FCollisionObjectQueryParams Query;
+		//you should not be allowed to hit your self
+		ColliParams.AddIgnoredActor(this);
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Attack Pressed"));
+
+		//DEBUGING
+		DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Green, true, 2);
+
+		bool MeleeHitResult = GetWorld()->LineTraceSingle(MeleeAttackHitResult, StartLocation, EndLocation, ColliParams, Query);
+
+		if (MeleeHitResult) {
+
+			DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Red, true, .03f);
+
+		}
+
+	}
+
+
+
 }
 
 
-void ARubyRose::ServerPerformAttack_Implementation(){
-
+void ARubyRose::ServerPerformAttack_Implementation(bool ShouldAttack){
+	PerformAttack(ShouldAttack);
 }
 
-bool ARubyRose::ServerPerformAttack_Validate(){
-
+bool ARubyRose::ServerPerformAttack_Validate(bool ShouldAttack){
 	return true;
 }
 
-void ARubyRose::OnRep_Attack() {
+void ARubyRose::SetAttackingBool(bool NewBoolState) {
+
+	bMeleeAttacking = NewBoolState;
 
 }
+
+void ARubyRose::OnRep_MeleeAttack() {
+	
+	OnAttack();
+}
+
+
 
 void ARubyRose::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const {
 

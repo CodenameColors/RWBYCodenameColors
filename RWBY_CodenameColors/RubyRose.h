@@ -23,11 +23,7 @@ protected:
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
 
-	void StartAttack();
-
-	void StopAttack();
-
-	void PerformAttack();
+	void PerformAttack(bool ShouldAttack);
 
 	void OnAttack();
 
@@ -35,7 +31,7 @@ protected:
 
 
 	//Boolean used to determine the dodging
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Attack)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		bool bCanDealAttackDamage;
 
 	//Boolean used to determine the dodging
@@ -59,24 +55,38 @@ private:
 
 	FTimerHandle PetalSpawnDelay;
 
+	void SetAttackingBool(bool NewBoolState);
+
+	FTimerHandle Attack;
 
 //***** ON REP FUNCTIONS*****\\
 
 public:
 
 	UFUNCTION()
-	void OnRep_Attack();
+	void OnRep_MeleeAttack() override;
 
 public:
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerPerformAttack();
-		void ServerPerformAttack_Implementation();
-		bool ServerPerformAttack_Validate();
+		void ServerPerformAttack(bool ShouldAttack);
+		void ServerPerformAttack_Implementation(bool ShouldAttack);
+		bool ServerPerformAttack_Validate(bool ShouldAttack);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerPerformDodge(bool bDodging) ;
-		void ServerPerformDodge_Implementation(bool bDodging) ;
-		bool ServerPerformDodge_Validate(bool bDodging) ;
+		void ServerPerformDodge_Implementation(bool bDodging);
+		bool ServerPerformDodge_Validate(bool bDodging);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void StartAttack();
+		void StartAttack_Implementation();
+		bool StartAttack_Validate();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void StopAttack();
+		void StopAttack_Implementation();
+		bool StopAttack_Validate();
+
 
 };

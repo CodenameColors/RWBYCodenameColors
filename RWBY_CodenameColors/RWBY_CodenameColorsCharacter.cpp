@@ -905,6 +905,11 @@ float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEv
 	return DamageAmount;
 }
 
+void ARWBY_CodenameColorsCharacter::DetermineElementalDamage(){
+
+}
+
+
 void ARWBY_CodenameColorsCharacter::RemoveStateWithDelay() {
 
 	FTimerDelegate RemoveState;
@@ -1507,6 +1512,10 @@ void ARWBY_CodenameColorsCharacter::OnRep_Slide() {
 	}
 }
 
+void ARWBY_CodenameColorsCharacter::OnRep_MeleeAttack() {
+	//OnAttack();
+}
+
 /* Replication Method (Properties)
 *
 *
@@ -1531,6 +1540,9 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, ClimbPosition);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, CharacterStatusEffects);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, WhileDodging);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, PoweredUpState);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bMeleeAttacking);
+
 	
 }
 

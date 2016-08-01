@@ -213,9 +213,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Dust)
 		TEnumAsByte<EDustType::Type> Dust;
-	
-	UPROPERTY(EditAnywhere, Replicated)
-		TEnumAsByte<EPoweredUpState::Type> PoweredUpState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 		TEnumAsByte<ECharacterState::Type> CharacterState;
@@ -283,45 +280,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		bool bWallJumping;
 
-	/*
-	static FORCEINLINE bool VTraceSphere(
-		AActor* ActorToIgnore,
-		const FVector& Start,
-		const FVector& End,
-		const float Radius,
-		FHitResult& HitOut,
-		ECollisionChannel TraceChannel = ECC_EngineTraceChannel1
-		) {
-		FCollisionQueryParams TraceParams(FName(TEXT("VictoreCore Trace")), true, ActorToIgnore);
-		TraceParams.bTraceComplex = true;
-		//TraceParams.bTraceAsyncScene = true;
-		TraceParams.bReturnPhysicalMaterial = false;
-
-		//Ignore Actors
-		TraceParams.AddIgnoredActor(ActorToIgnore);
-
-		//Re-initialize hit info
-		HitOut = FHitResult(ForceInit);
-
-		//Get World Source
-		TObjectIterator< AMyPlayerController > ThePC;
-		if (!ThePC) return false;
-
-
-		return ThePC->GetWorld()->SweepSingle(
-			HitOut,
-			Start,
-			End,
-			FQuat(),
-			TraceChannel,
-			FCollisionShape::MakeSphere(Radius),
-			TraceParams
-			);
-	}
-	*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
+	int32 Semblance;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_MeleeAttack)
+	bool bMeleeAttacking;
 	
 public:
 	ARWBY_CodenameColorsCharacter();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
+	TEnumAsByte<EPoweredUpState::Type> PoweredUpState;
 
 	TArray<TEnumAsByte<ECharacterState::Type>> GetStatusEffects();//const { return CharacterStatusEffects; }
 
@@ -343,6 +312,8 @@ public:
 	int16 GetFrozenPercent();
 
 	void RemoveStateWithDelay();
+
+	void DetermineElementalDamage();
 
 	//void OnBeginOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 
@@ -392,6 +363,9 @@ public:
 
 	UFUNCTION()
 		void OnRep_Slide();
+
+	UFUNCTION()
+		virtual void OnRep_MeleeAttack();
 
 	/*Other methods
 	*

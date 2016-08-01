@@ -35,8 +35,11 @@ void ARosePetal::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetPetalMaterial("Fire");
+	//SetPetalMaterial("Fire");
 	//
+
+	
+
 
 }
 
@@ -62,6 +65,13 @@ void ARosePetal::Tick( float DeltaTime )
 		UKismetSystemLibrary::MoveComponentTo(PetalMesh, Character, Rot, false, false, .35f, EMoveComponentAction::Move, LatentInfo);
 	}
 	//Force
+	//
+
+
+	if (Instigator != nullptr) {
+
+		SetPetalMaterial(MaterialChoice);
+	}
 
 	
 }
@@ -148,6 +158,7 @@ void ARosePetal::RoseOverlap(AActor * OtherActor, UPrimitiveComponent * OtherCom
 
 void ARosePetal::SetPetalMaterial(FString Material){
 
+	
 	if (Material == "Fire") {
 		PetalMesh->SetMaterial(0, DustTypes[0]);
 	}
@@ -163,6 +174,44 @@ void ARosePetal::SetPetalMaterial(FString Material){
 	else if (Material == "Ice") {
 		PetalMesh->SetMaterial(0, DustTypes[4]);
 	}
+	
+	
+	/*
+	//switch(GetInstigator()->GetMaterial)
+
+	if (Instigator != nullptr) {
+
+		ARWBY_CodenameColorsCharacter* Testing = Cast<ARWBY_CodenameColorsCharacter>(GetInstigator());
+
+		if (Testing) {
+
+			switch (Testing->PoweredUpState) {
+
+			case(EPoweredUpState::FiredUp) :
+				PetalMesh->SetMaterial(0, DustTypes[0]);
+				break;
+
+			case(EPoweredUpState::GravityUp) :
+				PetalMesh->SetMaterial(0, DustTypes[3]);
+				break;
+
+			case(EPoweredUpState::IcedUp) :
+				PetalMesh->SetMaterial(0, DustTypes[4]);
+				break;
+
+			case(EPoweredUpState::ShockedUp) :
+				PetalMesh->SetMaterial(0, DustTypes[1]);
+				break;
+
+			case(EPoweredUpState::WateredUp) :
+				PetalMesh->SetMaterial(0, DustTypes[2]);
+				break;
+
+			}
+
+		}
+	}
+	*/
 }
 
 
@@ -181,5 +230,7 @@ void ARosePetal::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifet
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ARosePetal, ActorsToFollow);
+	DOREPLIFETIME(ARosePetal, MaterialChoice);
+	
 
 }
