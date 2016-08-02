@@ -20,6 +20,7 @@ void UMyNativeAnimNotify::Notify(USkeletalMeshComponent * MeshComp, UAnimSequenc
 			if (Ruby) {
 				//Ruby->MoveToSection();
 				MeshComp->GetAnimInstance()->Montage_JumpToSection(FName("Attack End"), Ruby->Melee);
+				TestChar->GetCharacterMovement()->MaxWalkSpeed = 600;
 				Ruby->LastHitActor = nullptr;
 			}
 		}

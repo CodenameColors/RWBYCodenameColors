@@ -315,7 +315,7 @@ public:
 
 	void RemoveStateWithDelay();
 
-	void DetermineElementalDamage();
+	void DetermineElementalDamage(ARWBY_CodenameColorsCharacter* CurrentPlayer, float DamageAmount);
 
 	//void OnBeginOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
 

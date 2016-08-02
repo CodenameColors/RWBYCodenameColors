@@ -136,7 +136,7 @@ void ARubyRose::StartAttack_Implementation(){
 
 	bMeleeAttacking = true;
 	PerformAttack(true);
-
+	GetCharacterMovement()->MaxWalkSpeed = 60.f;
 }
 
 

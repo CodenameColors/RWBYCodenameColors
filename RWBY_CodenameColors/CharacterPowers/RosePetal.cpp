@@ -118,40 +118,27 @@ void ARosePetal::RoseOverlap(AActor * OtherActor, UPrimitiveComponent * OtherCom
 
 	ARWBY_CodenameColorsCharacter* HitCharacter = Cast<ARWBY_CodenameColorsCharacter>(OtherActor);
 	
-	if(ActorsToFollow.IsValidIndex(0)){
+	ARWBY_CodenameColorsCharacter* Insta = Cast<ARWBY_CodenameColorsCharacter>(GetInstigator());
+	
+	if(HitCharacter){
 
-		if (HitCharacter == ActorsToFollow[0]) {
+		if(Insta){
 
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("RWBY HIT"));
+			if(ActorsToFollow.IsValidIndex(0)){
 
-			HitCharacter->GetCharacterMovement()->AddImpulse(PetalMesh->GetForwardVector() * 10000, false);
+				if (HitCharacter == ActorsToFollow[0]) {
 
-			if (PetalMesh->GetMaterial(0)->GetName() == "Fire") {
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Fire"));
-				HitCharacter->CharacterStatusEffects.Add(ECharacterState::OnFire);
-				GetWorldTimerManager().ClearTimer(HitCharacter->FireLength);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("RWBY HIT"));
+
+					HitCharacter->DetermineElementalDamage(Insta, 0);
+
+					HitCharacter->GetCharacterMovement()->AddImpulse(PetalMesh->GetForwardVector() * 50000, false);
+
+					HitCharacter->RemoveStateWithDelay();
+
+					DestroySelf();
+				}
 			}
-			else if (PetalMesh->GetMaterial(0)->GetName() == "Electricty") {
-				HitCharacter->CharacterStatusEffects.Add(ECharacterState::Shocked);
-				GetWorldTimerManager().ClearTimer(HitCharacter->ShockLength);
-			}
-			else if (PetalMesh->GetMaterial(0)->GetName() == "Water") {
-				HitCharacter->CharacterStatusEffects.Add(ECharacterState::Wet);
-				GetWorldTimerManager().ClearTimer(HitCharacter->WaterLength);
-			}
-			else if (PetalMesh->GetMaterial(0)->GetName() == "Ground") {
-				HitCharacter->CharacterStatusEffects.Add(ECharacterState::GravityLow);
-				GetWorldTimerManager().ClearTimer(HitCharacter->GravityLength);
-			}
-			else if (PetalMesh->GetMaterial(0)->GetName() == "Ice") {
-				HitCharacter->CharacterStatusEffects.Add(ECharacterState::Freezing);
-				GetWorldTimerManager().ClearTimer(HitCharacter->IceLength);
-				HitCharacter->SetFrozenPercent(15);
-			}
-
-			HitCharacter->RemoveStateWithDelay();
-
-			DestroySelf();
 		}
 	}
 }
