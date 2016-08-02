@@ -550,8 +550,8 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 			//Set a bool to the state of the sphereTrace
 			bool WallHit = ThePC->GetWorld()->SweepSingle(HitOut, Start, End, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
 			//DEBUG PURPOSE UNCOMMENT IF NEED BE
-			DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Red, false, .01666);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
+			//DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Red, false, .01666);
+			//DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
 
 			//Check to see if the Ray Trace hit something/ Sphere Trace
 			if (WallHit) {
@@ -560,8 +560,8 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 				//Reseting the start location to be that of the end hit location
 				FVector Location = Location + HitOut.Location;
 				//DEBUG PURPOSE UNCOMMENT IF NEED BE
-				DrawDebugSphere(GetWorld(), Location, Radius, 10, FColor::Red, false, .01666);
-				DrawDebugLine(GetWorld(), Start, Location, FColor::Red, false, .01666);
+				//DrawDebugSphere(GetWorld(), Location, Radius, 10, FColor::Red, false, .01666);
+				//DrawDebugLine(GetWorld(), Start, Location, FColor::Red, false, .01666);
 
 			}
 			else {
@@ -590,8 +590,8 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 			//Set a bool to the state of the ray trace
 			bool WallHit = ThePC->GetWorld()->LineTraceSingle(HitDown, DownStart, LocationDown, TraceParams, CamObjectQueryParams);
 			//DEBUG PURPOSE UNCOMMENT IF NEED BE
-			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
-			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
+			//DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
+			//DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
 
 			//Check to see if the Ray Trace hit something
 			if (WallHit) {
@@ -601,11 +601,11 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
 
 				//Checks to see how far the character is from the/ climb location
-				if (HitDown.Distance < 120) {
+				if (!(HitDown.Distance > 120)) {
 
 					//DEBUGS
-					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .71666);
-					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .71666);
+					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .001666);
+					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .001666);
 
 					//If we have found a suitable end climbing position set
 					// set the character to be able to climb, also stop ray tracing
