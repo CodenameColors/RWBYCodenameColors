@@ -8,6 +8,7 @@
 #include "Pickup.h"
 #include "AmmoPickup.h"
 #include "DustPickup.h"
+#include "Runtime/Engine/Classes/Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
 ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
@@ -211,9 +212,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
 			ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
-
-
-			//CameraBoom->AttachTo(RootComponent);
+			//UKismetSystemLibrary::MoveComponentTo(RootComponent, ClimbPosition, CharRot, false, false, .34f, EMoveComponentAction::Move, LatentInfo);
 		}
 	}
 }
@@ -242,9 +241,17 @@ void ARWBY_CodenameColorsCharacter::StartJump(){
 		//if a viable position has been found then set the climbing variable to true
 		SetClimbing(true);
 
-		//bCanClimb = false;
-		//bHanging = false;
-		
+		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
+		FLatentActionInfo LatentInfo;
+		LatentInfo.CallbackTarget = this;
+		FRotator CharRot = ThisPlayer->GetCharacter()->GetActorRotation();
+
+		FVector Up = FVector(ClimbPosition.X, ThisPlayer->GetCharacter()->GetActorLocation().Y, ClimbPosition.Z-50);
+
+
+		UKismetSystemLibrary::MoveComponentTo(RootComponent, Up, CharRot, false, false, .84f, EMoveComponentAction::Move, LatentInfo);
+		//UKismetSystemLibrary::MoveComponentTo(RootComponent, ClimbPosition, CharRot, false, false, .34f, EMoveComponentAction::Move, LatentInfo);
 	}
 	//slide if can't clumb at the current moment
 	else if (bSliding) {
@@ -256,6 +263,8 @@ void ARWBY_CodenameColorsCharacter::StartJump(){
 	}
 
 }
+
+
 
 //This method is used in order to repilcate the state of the climbing variable accross the Server, and clients
 void ARWBY_CodenameColorsCharacter::SetClimbing_Implementation(bool NewState){
@@ -563,7 +572,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 		//TRACE DOWN
 
 		//Find the middle location of the character's forward offset
-		const FVector LocationDown = GetMesh()->GetSocketLocation(FName("Hip1"));
+		const FVector LocationDown = Start + ThisPlayer->GetCharacter()->GetActorForwardVector() * 50;     //GetMesh()->GetSocketLocation(FName("Hip1"));
 
 		//Use the Forward offset location and create a vector 150 units up from it
 		const FVector DownStart = ThisPlayer->GetCharacter()->GetActorUpVector() *150+ LocationDown;
@@ -592,7 +601,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
 
 				//Checks to see how far the character is from the/ climb location
-				if (HitDown.Distance > 90 && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
+				if (HitDown.Distance > 90) {
 
 					//DEBUGS
 					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .01666);
@@ -875,11 +884,9 @@ float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEv
 				Health -= DamageAmount;
 				break;
 			}
-			else if(CharacterStatusEffects.Contains(ECharacterState::Shocked)){
-				break;
-			}
-			CharacterStatusEffects.Add(ECharacterState::Wet);
 
+			CharacterStatusEffects.Add(ECharacterState::Wet);
+			Health -= DamageAmount;
 			GetWorldTimerManager().ClearTimer(WaterLength);
 			break;
 		case(EPoweredUpState::None) :
@@ -1544,6 +1551,8 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, WhileDodging);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, PoweredUpState);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bMeleeAttacking);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bSliding);
+	
 
 	
 }
