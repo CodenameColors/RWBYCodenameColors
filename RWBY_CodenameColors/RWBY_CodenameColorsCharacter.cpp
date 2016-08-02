@@ -601,11 +601,11 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 				FVector DownStart = DownStart + (HitDown.Location + ThisPlayer->GetCharacter()->GetActorUpVector() * 20);
 
 				//Checks to see how far the character is from the/ climb location
-				if (HitDown.Distance > 90) {
+				if (HitDown.Distance < 120) {
 
 					//DEBUGS
-					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .01666);
-					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .01666);
+					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .71666);
+					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .71666);
 
 					//If we have found a suitable end climbing position set
 					// set the character to be able to climb, also stop ray tracing
@@ -644,6 +644,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 
 		
 				else {
+					//bCanClimb = false;
 					//bCanWallSlide = true;
 				}
 
