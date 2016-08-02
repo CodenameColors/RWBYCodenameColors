@@ -275,9 +275,6 @@ protected:
 		bool bSliding;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
-		FVector ClimbPosition;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 		bool bWallJumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
@@ -295,6 +292,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	TArray<TEnumAsByte<ECharacterState::Type>> CharacterStatusEffects;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+		FVector ClimbPosition;
 
 	FTimerHandle FireLength;
 

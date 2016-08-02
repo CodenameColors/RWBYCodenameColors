@@ -215,19 +215,11 @@ void ARubyRose::OnAttack(){
 				if (LastHitActor != HitChar) {
 					DealDamage(10, MeleeAttackHitResult);
 					LastHitActor = HitChar;
-					Semblance = 10 * 1.7;
+					Semblance += 10 * 1.7;
 				}
-				
-				
 			}
-			
-			
 		}
-
 	}
-
-
-
 }
 
 
