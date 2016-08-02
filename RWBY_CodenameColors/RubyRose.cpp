@@ -134,6 +134,10 @@ void ARubyRose::OnDodge(){
 
 void ARubyRose::StartAttack_Implementation(){
 
+	if (bHanging || bSliding) {
+		return;
+	}
+
 	bMeleeAttacking = true;
 	PerformAttack(true);
 	GetCharacterMovement()->MaxWalkSpeed = 60.f;

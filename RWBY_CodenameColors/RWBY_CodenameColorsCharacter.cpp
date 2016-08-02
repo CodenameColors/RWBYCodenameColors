@@ -241,32 +241,35 @@ void ARWBY_CodenameColorsCharacter::MoveCharacter( ){
 
 void ARWBY_CodenameColorsCharacter::StartJump(){
 	
-	//can climb is checked for, aka is there a viable position to climb too
-	if (bCanClimb) {
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Space Pressed"));
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 
-		//if a viable position has been found then set the climbing variable to true
-		SetClimbing(true);
+	if (ThisPlayer) {
+		//can climb is checked for, aka is there a viable position to climb too
+		if (bCanClimb && bHanging) {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Space Pressed"));
 
-		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+			//if a viable position has been found then set the climbing variable to true
+			SetClimbing(true);
 
-		FLatentActionInfo LatentInfo;
-		LatentInfo.CallbackTarget = this;
-		FRotator CharRot = ThisPlayer->GetCharacter()->GetActorRotation();
+			FLatentActionInfo LatentInfo;
+			LatentInfo.CallbackTarget = this;
+			FRotator CharRot = ThisPlayer->GetCharacter()->GetActorRotation();
 
-		FVector Up = FVector(ClimbPosition.X, ThisPlayer->GetCharacter()->GetActorLocation().Y, ClimbPosition.Z-50);
+			FVector Up = FVector(ClimbPosition.X, ThisPlayer->GetCharacter()->GetActorLocation().Y, ClimbPosition.Z - 50);
 
 
-		UKismetSystemLibrary::MoveComponentTo(RootComponent, Up, CharRot, false, false, .84f, EMoveComponentAction::Move, LatentInfo);
-		//UKismetSystemLibrary::MoveComponentTo(RootComponent, ClimbPosition, CharRot, false, false, .34f, EMoveComponentAction::Move, LatentInfo);
-	}
-	//slide if can't clumb at the current moment
-	else if (bSliding) {
-		PerformWallJump(true);
-	}
-	else {
-		bPressedJump = true;
-		JumpKeyHoldTime = 0.0f;
+			UKismetSystemLibrary::MoveComponentTo(RootComponent, Up, CharRot, false, false, .84f, EMoveComponentAction::Move, LatentInfo);
+			//UKismetSystemLibrary::MoveComponentTo(RootComponent, ClimbPosition, CharRot, false, false, .34f, EMoveComponentAction::Move, LatentInfo);
+		}
+		//slide if can't clumb at the current moment
+		else if (bSliding) {
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			PerformWallJump(true);
+		}
+		else {
+			bPressedJump = true;
+			JumpKeyHoldTime = 0.0f;
+		}
 	}
 
 }

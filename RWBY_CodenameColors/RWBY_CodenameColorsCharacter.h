@@ -173,7 +173,8 @@ protected:
 	int16 FrozenPercent;
 
 	//Enum used to determine the camera/ movement state of the characters
-	ECameraType::Type Perspective;
+	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter")
+	TEnumAsByte<ECameraType::Type> Perspective;
 
 	//Boolean used to determine the dodging
 	UPROPERTY(ReplicatedUsing = OnRep_Dodge, EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Category = "RWBYCharacter" )
