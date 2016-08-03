@@ -422,6 +422,8 @@ void ARWBY_CodenameColorsCharacter::LookUpAtRate(float Rate)
 //This method will allow the player to switch cameras
 void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
 	switch(Perspective){
 
 		case(ECameraType::None) :
@@ -430,11 +432,13 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 			SideViewCameraComponent->Deactivate();
 			FollowCamera->Activate();
 			Perspective = ECameraType::Third;
+			ThisPlayer->bShowMouseCursor = false;
 			break;
 		case(ECameraType::Third):
 			FollowCamera->Deactivate();
 			SideViewCameraComponent->Activate();
 			Perspective = ECameraType::Side;
+			ThisPlayer->bShowMouseCursor = true;
 			break;
 	}
 
@@ -754,6 +758,8 @@ void ARWBY_CodenameColorsCharacter::ServerAddVelocity_Implementation() {
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
 		if (bWallJumping) {
+
+			//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.operator+=(FVector(0, ThisPlayer->GetCharacter()->GetActorForwardVector().Y, -2) * (750 * -1));
 		}
 		bWallJumping = false;
@@ -1193,51 +1199,86 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 	* Takes the beginnig location, and the end of location and draws a line between them,
 	* Makes the line be drawn on the normal, and not a define vector GREAT for attaking animations
 	**/
-	bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
-	
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
-	
+	if (Perspective == ECameraType::Third) {
 
-	if (CamHitSuccess) {
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
-		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 255, 0), true, 1);
+		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
 
-		UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
+		if (CamHitSuccess) {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
+			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 255, 0), true, 1);
 
-		//if what was hit, was indeed a capsule component
-		if (SkeletalTest) {
-			//debuging...
-			//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *HitResult.GetComponent()->GetName());
-			//UE_LOG(LogClass, Log, TEXT(" Skeletal Mesh Hit:  %s "), *HitResult.GetComponent()->GetName());
+			UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
 
-			//Cast the Hit result to the ARWBY_TestingCharacter class to test
-			ARWBY_CodenameColorsCharacter* TestCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
-			//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
-			if (TestCharacter) {
+			//if what was hit, was indeed a capsule component
+			if (SkeletalTest) {
+				//debuging...
+				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *HitResult.GetComponent()->GetName());
+				//UE_LOG(LogClass, Log, TEXT(" Skeletal Mesh Hit:  %s "), *HitResult.GetComponent()->GetName());
 
-				DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(255, 0, 0), true, 1 );
+				//Cast the Hit result to the ARWBY_TestingCharacter class to test
+				ARWBY_CodenameColorsCharacter* TestCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
+				//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
+				if (TestCharacter) {
 
-				TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-				FDamageEvent DamageEvent(ValidDamageTypeClass);
+					DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(255, 0, 0), true, 1);
 
-				APlayerController* MyController = Cast<APlayerController>(GetController());
+					TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+					FDamageEvent DamageEvent(ValidDamageTypeClass);
+
+					APlayerController* MyController = Cast<APlayerController>(GetController());
 
 					//Base Damage Dealer
 					TestCharacter->GetShot(20, DamageEvent, MyController, this);
 
 
 
-				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *CameraHit.GetComponent()->GetName());
+					//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *CameraHit.GetComponent()->GetName());
+				}
 			}
+
+		}
+		else {
+			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 0, 225), true, 1);
 		}
 
+		GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);
 	}
-	else {
-		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 0, 225), true, 1);
+	else if (Perspective == ECameraType::Side) {
+
+		FVector MouseTestLoc;
+		FVector MouseTestDir;
+
+		FVector2D mousePos = FVector2D(0, 0);
+		FVector worldpos; // = FVector(0, mousePos.X, mousePos.Y);
+		FVector dir = FVector(0, 0, 0);
+		ThisPlayer->GetMousePosition(mousePos.X, mousePos.Y);
+		ThisPlayer->DeprojectMousePositionToWorld(worldpos, dir); 
+		//ThisPlayer->DeprojectScreenPositionToWorld(mousePos.X, mousePos.Y, worldpos, dir);
+
+		FVector StartLocation = ThisPlayer->GetCharacter()->GetActorLocation();
+
+		//FVector EndTest1 = (dir* (FVector(0, 0, worldpos.Z / dir.Z))) * -1;
+		FVector EndTest1 = dir * (CameraBoom->TargetArmLength);
+		FVector EndTest2 = worldpos + EndTest1;
+		FVector EndTest = FVector(ThisPlayer->GetCharacter()->GetActorLocation().X, EndTest2.Y, EndTest2.Z);
+
+		FVector MoreTest = EndTest - StartLocation;
+		//FVector MoreTest2 = MoreTest
+
+
+		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, StartLocation, StartLocation + MoreTest * 100, CamCollisionParams, CamObjectQueryParams);
+		DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Blue, true, 5);
+		
+
+		if (CamHitSuccess) {
+			DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Green, true, 5);
+		}
+
+		//StartLocation + dir * 10000,
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Shot in side Person"));
 	}
-
-	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);
-
 }
 
 void ARWBY_CodenameColorsCharacter::OnDodge() {
