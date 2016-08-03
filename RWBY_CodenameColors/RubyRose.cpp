@@ -47,6 +47,9 @@ void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 	InputComponent->BindAction("MeleeAttack", IE_Pressed, this, &ARubyRose::StartAttack);
 	InputComponent->BindAction("MeleeAttack", IE_Released, this, &ARubyRose::StopAttack);
 
+	InputComponent->BindAction("Shoot", IE_Pressed, this, &ARubyRose::StartShooting);
+	InputComponent->BindAction("Shoot", IE_Released, this, &ARubyRose::StopShooting);
+
 }
 
 
@@ -251,6 +254,146 @@ void ARubyRose::OnRep_MeleeAttack() {
 	}
 
 	OnAttack();
+}
+
+void ARubyRose::StartShooting() {
+	Super::StartShooting();
+}
+
+void ARubyRose::StopShooting() {
+	Super::StopShooting();
+}
+
+void ARubyRose::ServerPerformTask_Implementation(ETask::Type NewTask) {
+
+	Super::ServerPerformTask(NewTask);
+}
+
+bool ARubyRose::ServerPerformTask_Validate(ETask::Type NewTask) {
+	return true;
+}
+
+void ARubyRose::PerformTask(ETask::Type NewTask) {
+	Super::PerformTask(NewTask);
+}
+
+void ARubyRose::OnFire() {
+	
+	//Super::OnFire();
+
+	if (Task != ETask::Shooting) {
+		return;
+	}
+
+	const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("AttackSocket 2"));
+	//gets the beginning socket
+	FVector CameraLocation = GetFollowCamera()->GetComponentLocation();
+	FVector CameraForVector = GetFollowCamera()->GetForwardVector();
+
+	FVector ForwardVector;
+	float Length;
+
+	CameraForVector.ToDirectionAndLength(ForwardVector, Length);
+
+	FHitResult CameraHit;
+	//creates the hit parameters
+	FCollisionQueryParams CamCollisionParams;
+	//cerates the object query parameters
+	FCollisionObjectQueryParams CamObjectQueryParams;
+
+	//makes it so the current actor cannot hit them self
+	CamCollisionParams.AddIgnoredActor(this);
+
+	/*creates a bool that checks if the ray trace hit something
+	*@PARAM Needs a FHitresult
+	*@PARAM find the beginning location with the location of a socket
+	*@PARAM Find the ending location with the location of another socket
+	*@PARAM collisonparams the parameters the hit trace must follow
+	*@PARAM ObjectQueryParams the parameters the hit trace must follow
+	* Takes the beginnig location, and the end of location and draws a line between them,
+	* Makes the line be drawn on the normal, and not a define vector GREAT for attaking animations
+	**/
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (Perspective == ECameraType::Third) {
+
+		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
+
+		if (CamHitSuccess) {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
+			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 255, 0), true, 1);
+
+			UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
+
+			//if what was hit, was indeed a capsule component
+			if (SkeletalTest) {
+				//debuging...
+				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *HitResult.GetComponent()->GetName());
+				//UE_LOG(LogClass, Log, TEXT(" Skeletal Mesh Hit:  %s "), *HitResult.GetComponent()->GetName());
+
+				//Cast the Hit result to the ARWBY_TestingCharacter class to test
+				ARWBY_CodenameColorsCharacter* TestCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
+				//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
+				if (TestCharacter) {
+
+					DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(255, 0, 0), true, 1);
+
+					TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+					FDamageEvent DamageEvent(ValidDamageTypeClass);
+
+					APlayerController* MyController = Cast<APlayerController>(GetController());
+
+					//Base Damage Dealer
+					TestCharacter->GetShot(17.5, DamageEvent, MyController, this);
+
+
+
+					//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *CameraHit.GetComponent()->GetName());
+				}
+			}
+
+		}
+		else {
+			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 0, 225), true, 1);
+		}
+
+		GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARubyRose::OnFire, 1.f);
+	}
+	else if (Perspective == ECameraType::Side) {
+
+		FVector MouseTestLoc;
+		FVector MouseTestDir;
+
+		FVector2D mousePos = FVector2D(0, 0);
+		FVector worldpos; // = FVector(0, mousePos.X, mousePos.Y);
+		FVector dir = FVector(0, 0, 0);
+		ThisPlayer->GetMousePosition(mousePos.X, mousePos.Y);
+		ThisPlayer->DeprojectMousePositionToWorld(worldpos, dir);
+		//ThisPlayer->DeprojectScreenPositionToWorld(mousePos.X, mousePos.Y, worldpos, dir);
+
+		FVector StartLocation = ThisPlayer->GetCharacter()->GetActorLocation();
+
+		//FVector EndTest1 = (dir* (FVector(0, 0, worldpos.Z / dir.Z))) * -1;
+		FVector EndTest1 = dir * 500.f;
+		FVector EndTest2 = worldpos + EndTest1;
+		FVector EndTest = FVector(ThisPlayer->GetCharacter()->GetActorLocation().X, EndTest2.Y, EndTest2.Z);
+
+		FVector MoreTest = EndTest - StartLocation;
+		//FVector MoreTest2 = MoreTest
+
+
+		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, StartLocation, StartLocation + MoreTest * 100, CamCollisionParams, CamObjectQueryParams);
+		DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Blue, true, 5);
+
+
+		if (CamHitSuccess) {
+			DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Green, true, 5);
+		}
+
+		//StartLocation + dir * 10000,
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Shot sideways"));
+	}
+
 }
 
 void ARubyRose::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifetimeProps) const {
