@@ -51,18 +51,6 @@ private:
 
 	void PerformDodge(bool bDodge) override;
 
-
-	//method used start shooting
-	void StartShooting() override;
-
-	//method used to stop shooting
-	void StopShooting() override;
-
-	//method used to preform tasks (Client)
-	void PerformTask(ETask::Type NewTask) override;
-
-	void OnFire() override;
-
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose")
 	TSubclassOf<class ARosePetal> RosePetal;
 	 
@@ -104,11 +92,6 @@ public:
 		void StopAttack();
 		void StopAttack_Implementation();
 		bool StopAttack_Validate();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerPerformTask(ETask::Type NewTask) override;
-		void ServerPerformTask_Implementation(ETask::Type NewTask) override;
-		bool ServerPerformTask_Validate(ETask::Type NewTask) override;
 
 
 };
