@@ -122,8 +122,8 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 	InputComponent->BindAction("PerspectiveSwitch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::SwitchCamera);
 
-	InputComponent->BindAction("Shoot", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
-	InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
+	//InputComponent->BindAction("Shoot", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
+	//InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
 
 	//InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
 	//InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
@@ -1226,10 +1226,8 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 					TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 					FDamageEvent DamageEvent(ValidDamageTypeClass);
 
-					APlayerController* MyController = Cast<APlayerController>(GetController());
-
 					//Base Damage Dealer
-					TestCharacter->GetShot(20, DamageEvent, MyController, this);
+					TestCharacter->GetShot(20, DamageEvent, ThisPlayer, this);
 
 
 
@@ -1246,12 +1244,9 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 	}
 	else if (Perspective == ECameraType::Side) {
 
-		FVector MouseTestLoc;
-		FVector MouseTestDir;
-
 		FVector2D mousePos = FVector2D(0, 0);
 		FVector worldpos; // = FVector(0, mousePos.X, mousePos.Y);
-		FVector dir = FVector(0, 0, 0);
+		FVector dir;
 		ThisPlayer->GetMousePosition(mousePos.X, mousePos.Y);
 		ThisPlayer->DeprojectMousePositionToWorld(worldpos, dir); 
 		//ThisPlayer->DeprojectScreenPositionToWorld(mousePos.X, mousePos.Y, worldpos, dir);
@@ -1263,16 +1258,32 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 		FVector EndTest2 = worldpos + EndTest1;
 		FVector EndTest = FVector(ThisPlayer->GetCharacter()->GetActorLocation().X, EndTest2.Y, EndTest2.Z);
 
-		FVector MoreTest = EndTest - StartLocation;
+		MoreTest = EndTest - StartLocation;
 		//FVector MoreTest2 = MoreTest
 
 
 		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, StartLocation, StartLocation + MoreTest * 100, CamCollisionParams, CamObjectQueryParams);
 		DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Blue, true, 5);
-		
 
 		if (CamHitSuccess) {
 			DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Green, true, 5);
+			ARWBY_CodenameColorsCharacter* TestCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
+
+			if (TestCharacter) {
+
+				DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Red, true, 5);
+
+				TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+				FDamageEvent DamageEvent(ValidDamageTypeClass);
+
+				//Base Damage Dealer
+				TestCharacter->GetShot(20, DamageEvent, ThisPlayer, this);
+
+
+
+				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *CameraHit.GetComponent()->GetName());
+			}
+
 		}
 
 		//StartLocation + dir * 10000,
