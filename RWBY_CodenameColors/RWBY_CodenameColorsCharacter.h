@@ -112,7 +112,7 @@ protected:
 	void SwitchCamera();
 
 	//method used to fire from the center of the camera (screen)
-	void OnFire();
+	virtual void OnFire();
 
 	virtual void OnDodge();
 
@@ -123,10 +123,10 @@ protected:
 	void StopHealing();
 
 	//method used start shooting
-	void StartShooting();
+	virtual void StartShooting();
 
 	//method used to stop shooting
-	void StopShooting();
+	virtual void StopShooting();
 
 	//method used to start dodging
 	virtual void StartDodging();
@@ -139,7 +139,7 @@ protected:
 	virtual void PerformDodge(bool bDodge);
 
 	//method used to preform tasks (Client)
-	void PerformTask(ETask::Type NewTask);
+	virtual void PerformTask(ETask::Type NewTask);
 
 	void PerformUseDust( );
 
@@ -284,15 +284,9 @@ protected:
 public:
 	ARWBY_CodenameColorsCharacter();
 
-<<<<<<< HEAD
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	FVector MoreTest;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
-	FVector2D MousePos;
-
-=======
->>>>>>> parent of cd08a69... Shooting now happens from the Ruby class
 	AActor* LastHitActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
@@ -353,7 +347,7 @@ public:
 	*/
 
 	UFUNCTION()
-		void OnRep_Task();
+		virtual void OnRep_Task();
 	
 	UFUNCTION()
 		void OnRep_Health();
