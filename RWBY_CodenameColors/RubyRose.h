@@ -51,17 +51,6 @@ private:
 
 	void PerformDodge(bool bDodge) override;
 
-	//method used start shooting
-	void StartShooting();
-
-	//method used to stop shooting
-	void StopShooting();
-
-	//method used to preform tasks (Client)
-	void PerformTask(ETask::Type NewTask) override;
-
-	void OnFire() override;
-
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose")
 	TSubclassOf<class ARosePetal> RosePetal;
 	 
@@ -81,10 +70,6 @@ public:
 
 	UFUNCTION()
 	void OnRep_MeleeAttack() override;
-
-	UFUNCTION()
-	void OnRep_Task() override;
-
 
 public:
 
@@ -108,10 +93,18 @@ public:
 		void StopAttack_Implementation();
 		bool StopAttack_Validate();
 
+<<<<<<< HEAD
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerPerformTask_(ETask::Type NewTask);
 		void ServerPerformTask__Implementation(ETask::Type NewTask);
 		bool ServerPerformTask__Validate(ETask::Type NewTask);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void GetMousePos(FHitResult Shoot2D);
+		void GetMousePos_Implementation(FHitResult Shoot2D);
+		bool GetMousePos_Validate(FHitResult Shoot2D);
+
+=======
+>>>>>>> parent of cd08a69... Shooting now happens from the Ruby class
 
 };
