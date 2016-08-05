@@ -112,7 +112,7 @@ protected:
 	void SwitchCamera();
 
 	//method used to fire from the center of the camera (screen)
-	virtual void OnFire();
+	void OnFire();
 
 	virtual void OnDodge();
 
@@ -123,10 +123,10 @@ protected:
 	void StopHealing();
 
 	//method used start shooting
-	virtual void StartShooting();
+	void StartShooting();
 
 	//method used to stop shooting
-	virtual void StopShooting();
+	void StopShooting();
 
 	//method used to start dodging
 	virtual void StartDodging();
@@ -139,7 +139,7 @@ protected:
 	virtual void PerformDodge(bool bDodge);
 
 	//method used to preform tasks (Client)
-	virtual void PerformTask(ETask::Type NewTask);
+	void PerformTask(ETask::Type NewTask);
 
 	void PerformUseDust( );
 
@@ -344,7 +344,7 @@ public:
 	*/
 
 	UFUNCTION()
-		virtual void OnRep_Task();
+		void OnRep_Task();
 	
 	UFUNCTION()
 		void OnRep_Health();
@@ -404,9 +404,9 @@ public:
 protected:
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		virtual void ServerPerformTask(ETask::Type NewTask);
-		virtual void ServerPerformTask_Implementation(ETask::Type NewTask);
-		virtual bool ServerPerformTask_Validate(ETask::Type NewTask);
+		void ServerPerformTask(ETask::Type NewTask);
+		void ServerPerformTask_Implementation(ETask::Type NewTask);
+		bool ServerPerformTask_Validate(ETask::Type NewTask);
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		 void ServerPerformDodge(bool bDodging);

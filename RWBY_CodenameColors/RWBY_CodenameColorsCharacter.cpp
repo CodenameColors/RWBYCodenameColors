@@ -122,8 +122,8 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 	InputComponent->BindAction("PerspectiveSwitch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::SwitchCamera);
 
-	//InputComponent->BindAction("Shoot", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
-	//InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
+	InputComponent->BindAction("Shoot", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
+	InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
 
 	//InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
 	//InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
