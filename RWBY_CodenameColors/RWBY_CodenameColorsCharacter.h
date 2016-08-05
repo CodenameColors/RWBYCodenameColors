@@ -112,7 +112,7 @@ protected:
 	void SwitchCamera();
 
 	//method used to fire from the center of the camera (screen)
-	virtual void OnFire();
+	void OnFire();
 
 	virtual void OnDodge();
 
@@ -123,10 +123,10 @@ protected:
 	void StopHealing();
 
 	//method used start shooting
-	virtual void StartShooting();
+	void StartShooting();
 
 	//method used to stop shooting
-	virtual void StopShooting();
+	void StopShooting();
 
 	//method used to start dodging
 	virtual void StartDodging();
@@ -139,7 +139,7 @@ protected:
 	virtual void PerformDodge(bool bDodge);
 
 	//method used to preform tasks (Client)
-	virtual void PerformTask(ETask::Type NewTask);
+	void PerformTask(ETask::Type NewTask);
 
 	void PerformUseDust( );
 
@@ -284,9 +284,6 @@ protected:
 public:
 	ARWBY_CodenameColorsCharacter();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
-	FVector MoreTest;
-
 	AActor* LastHitActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
@@ -347,7 +344,7 @@ public:
 	*/
 
 	UFUNCTION()
-		virtual void OnRep_Task();
+		void OnRep_Task();
 	
 	UFUNCTION()
 		void OnRep_Health();
