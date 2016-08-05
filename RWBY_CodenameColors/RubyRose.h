@@ -43,6 +43,16 @@ protected:
 
 private:
 
+	//method used start shooting
+	void StartShooting()override;
+
+	//method used to stop shooting
+	void StopShooting()override;
+
+	void PerformTask(ETask::Type NewTask)override;
+
+	void OnFire()override;
+
 	void OnDodge() override;
 
 	void StartDodging() override;
@@ -61,6 +71,9 @@ private:
 	void SetAttackingBool(bool NewBoolState);
 
 	FTimerHandle Attack;
+
+	UPROPERTY(Replicated)
+	FVector MousePosVector;
 
 	//void setStupid(class ARWBY_CodenameColorsCharacter* EPoweredUpState::Type);
 
@@ -93,5 +106,14 @@ public:
 		void StopAttack_Implementation();
 		bool StopAttack_Validate();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformTask(ETask::Type NewTask);
+		void ServerPerformTask_Implementation(ETask::Type NewTask);
+		bool ServerPerformTask_Validate(ETask::Type NewTask);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerGetMousePos(FVector World, FVector Direction);
+		void ServerGetMousePos_Implementation(FVector World, FVector Direction);
+		bool ServerGetMousePos_Validate(FVector World, FVector Direction);
 
 };
