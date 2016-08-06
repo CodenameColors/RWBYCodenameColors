@@ -42,10 +42,13 @@ void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 	Super::SetupPlayerInputComponent(InputComponent);
 
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ARubyRose::StartDodging);
-	InputComponent->BindAction("Dodge", IE_Released, this, &ARubyRose::StopDodging);
+	//InputComponent->BindAction("Dodge", IE_Released, this, &ARubyRose::StopDodging);
 
 	InputComponent->BindAction("MeleeAttack", IE_Pressed, this, &ARubyRose::StartAttack);
 	InputComponent->BindAction("MeleeAttack", IE_Released, this, &ARubyRose::StopAttack);
+
+	InputComponent->BindAction("Shoot", IE_Pressed, this, &ARubyRose::StartShooting);
+	//InputComponent->BindAction("Shoot", IE_Released, this, &ARubyRose::StopShooting);
 
 }
 
@@ -114,6 +117,10 @@ bool ARubyRose::ServerPerformDodge_Validate(bool bDodging) {
 
 void ARubyRose::StartDodging(){
 	PerformDodge(true);
+
+	FTimerHandle StopDodge;
+	GetWorldTimerManager().SetTimer(StopDodge, this, &ARubyRose::StopDodging, .55, false);
+
 }
 
 void ARubyRose::StopDodging(){
@@ -239,6 +246,146 @@ void ARubyRose::SetAttackingBool(bool NewBoolState) {
 
 	bMeleeAttacking = NewBoolState;
 
+}
+
+void ARubyRose::StartShooting() {
+
+	PerformTask(ETask::Shooting);
+
+	FTimerHandle StopAttack;
+	GetWorldTimerManager().SetTimer(StopAttack, this, &ARubyRose::StopShooting, .6, false);
+}
+
+void ARubyRose::StopShooting() {
+
+	PerformTask(ETask::None);
+
+	//GetCharacterMovement()->MaxWalkSpeed = 600.f;
+}
+
+void ARubyRose::PerformTask(ETask::Type NewTask) {
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformTask(NewTask);
+		return;
+	}
+	//GetCharacterMovement()->MaxWalkSpeed = 0.f;
+	Task = NewTask;
+
+	OnRep_Task();
+}
+
+void ARubyRose::ServerPerformTask__Implementation(ETask::Type NewTask) {
+
+	PerformTask(NewTask);
+}
+
+bool ARubyRose::ServerPerformTask__Validate(ETask::Type NewTask) {
+	return true;
+}
+
+void ARubyRose::OnFire() {
+
+
+	if (Task != ETask::Shooting) {
+		return;
+	}
+
+	const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("AttackSocket 2"));
+	//gets the beginning socket
+	FVector CameraLocation = GetFollowCamera()->GetComponentLocation();
+	FVector CameraForVector = GetFollowCamera()->GetForwardVector();
+
+	FVector ForwardVector;
+	float Length;
+
+	CameraForVector.ToDirectionAndLength(ForwardVector, Length);
+
+	FHitResult CameraHit;
+	//creates the hit parameters
+	FCollisionQueryParams CamCollisionParams;
+	//cerates the object query parameters
+	FCollisionObjectQueryParams CamObjectQueryParams;
+
+	//makes it so the current actor cannot hit them self
+	CamCollisionParams.AddIgnoredActor(this);
+
+	/*creates a bool that checks if the ray trace hit something
+	*@PARAM Needs a FHitresult
+	*@PARAM find the beginning location with the location of a socket
+	*@PARAM Find the ending location with the location of another socket
+	*@PARAM collisonparams the parameters the hit trace must follow
+	*@PARAM ObjectQueryParams the parameters the hit trace must follow
+	* Takes the beginnig location, and the end of location and draws a line between them,
+	* Makes the line be drawn on the normal, and not a define vector GREAT for attaking animations
+	**/
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+
+	bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
+	DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Blue, true, 1);
+	if (CamHitSuccess) {
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
+		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Green, true, 1);
+
+		UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
+
+		//if what was hit, was indeed a capsule component
+		if (SkeletalTest) {
+			//debuging...
+			//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *HitResult.GetComponent()->GetName());
+			//UE_LOG(LogClass, Log, TEXT(" Skeletal Mesh Hit:  %s "), *HitResult.GetComponent()->GetName());
+
+			//Cast the Hit result to the ARWBY_TestingCharacter class to test
+			ARWBY_CodenameColorsCharacter* TestCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
+			//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
+			if (TestCharacter) {
+
+				DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Red, true, 1);
+
+				TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+				FDamageEvent DamageEvent(ValidDamageTypeClass);
+
+				APlayerController* MyController = Cast<APlayerController>(GetController());
+
+				//Base Damage Dealer
+				TestCharacter->GetShot(21, DamageEvent, MyController, this);
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("RWBY Shot"));
+
+			}
+		}
+
+		else {
+			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 0, 225), true, 1);
+		}
+
+	}
+
+}
+
+void ARubyRose::OnRep_Task() {
+
+	switch (Task) {
+
+	case(ETask::None) :
+		Shooting = false;
+
+		if (Perspective == ECameraType::Side) {
+			GetCharacterMovement()->MaxWalkSpeed = 450;
+		}
+		else if(Perspective == ECameraType::Third ){
+			GetCharacterMovement()->MaxWalkSpeed = 600;
+		}
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		break;
+	case(ETask::Shooting) :
+		if (CurrentAmmo > 0) {
+			OnFire();
+			Shooting = true;
+			GetCharacterMovement()->MaxWalkSpeed = 0;
+			GetCharacterMovement()->DisableMovement();
+		}
+		break;
+	}
 }
 
 void ARubyRose::OnRep_MeleeAttack() {

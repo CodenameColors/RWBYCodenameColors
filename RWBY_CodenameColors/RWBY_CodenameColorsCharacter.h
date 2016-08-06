@@ -112,7 +112,7 @@ protected:
 	void SwitchCamera();
 
 	//method used to fire from the center of the camera (screen)
-	void OnFire();
+	virtual void OnFire();
 
 	virtual void OnDodge();
 
@@ -123,10 +123,10 @@ protected:
 	void StopHealing();
 
 	//method used start shooting
-	void StartShooting();
+	virtual void StartShooting();
 
 	//method used to stop shooting
-	void StopShooting();
+	virtual	void StopShooting();
 
 	//method used to start dodging
 	virtual void StartDodging();
@@ -139,7 +139,7 @@ protected:
 	virtual void PerformDodge(bool bDodge);
 
 	//method used to preform tasks (Client)
-	void PerformTask(ETask::Type NewTask);
+	virtual void PerformTask(ETask::Type NewTask);
 
 	void PerformUseDust( );
 
@@ -158,6 +158,8 @@ protected:
 	void OnLedgeTrace();
 
 	void LedgeGrab();
+
+	void GetAimAngle();
 
 	//returns true while in the middle of a dodge
 	UPROPERTY(BlueprintReadWrite, Replicated)
@@ -227,55 +229,55 @@ protected:
 
 	FTimerHandle TimerHandler_Healing;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		float MaxAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(ReplicatedUsing = OnRep_Ammo)
 		float CurrentAmmo;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		bool Shooting;
 
 	// the state of character true if powered up
-	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Dust)
+	UPROPERTY(ReplicatedUsing=OnRep_Dust)
 		bool bIsPoweredUp;
 
 	// the state of character true if powered up
-	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		bool bCanPickupDust;
 
 	// the state of character true if powered up
-	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Health)
+	UPROPERTY(ReplicatedUsing=OnRep_Health)
 		bool bCanHeal;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing=OnRep_Ledge)
+	UPROPERTY(ReplicatedUsing=OnRep_Ledge)
 		bool bCanWallTrace;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		bool bCanClimb;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		bool bHanging;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		bool bClimbing;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		bool bDoneClimbing;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Trip)
+	UPROPERTY(ReplicatedUsing = OnRep_Trip)
 		bool bLedgeTrip;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Trip)
+	UPROPERTY(ReplicatedUsing = OnRep_Trip)
 		bool bFallDamage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		bool bCanWallSlide;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", ReplicatedUsing = OnRep_Slide)
+	UPROPERTY(ReplicatedUsing = OnRep_Slide)
 		bool bSliding;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(Replicated)
 		bool bWallJumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
@@ -344,7 +346,7 @@ public:
 	*/
 
 	UFUNCTION()
-		void OnRep_Task();
+		virtual void OnRep_Task();
 	
 	UFUNCTION()
 		void OnRep_Health();

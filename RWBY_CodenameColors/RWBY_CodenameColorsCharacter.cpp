@@ -122,8 +122,8 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 	InputComponent->BindAction("PerspectiveSwitch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::SwitchCamera);
 
-	InputComponent->BindAction("Shoot", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
-	InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
+	//InputComponent->BindAction("Shoot", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
+	//InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
 
 	//InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
 	//InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
@@ -1155,6 +1155,10 @@ bool ARWBY_CodenameColorsCharacter::ServerRemoveCharacterState_Validate(ECharact
 	return true;
 }
 
+void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset()
+{
+}
+
 void ARWBY_CodenameColorsCharacter::OnHeal() {
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Purple, TEXT("HEALING"));
@@ -1166,7 +1170,7 @@ void ARWBY_CodenameColorsCharacter::OnHeal() {
 
 void ARWBY_CodenameColorsCharacter::OnFire() {
 
-
+	 
 	if (Task != ETask::Shooting) {
 		return;
 	}
@@ -1200,7 +1204,6 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 	* Makes the line be drawn on the normal, and not a define vector GREAT for attaking animations
 	**/
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
-	if (Perspective == ECameraType::Third) {
 
 		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
 
@@ -1236,49 +1239,13 @@ void ARWBY_CodenameColorsCharacter::OnFire() {
 					//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *CameraHit.GetComponent()->GetName());
 				}
 			}
-
-		}
+		
 		else {
 			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor(0, 0, 225), true, 1);
 		}
 
-		GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);
 	}
-	else if (Perspective == ECameraType::Side) {
 
-		FVector MouseTestLoc;
-		FVector MouseTestDir;
-
-		FVector2D mousePos = FVector2D(0, 0);
-		FVector worldpos; // = FVector(0, mousePos.X, mousePos.Y);
-		FVector dir = FVector(0, 0, 0);
-		ThisPlayer->GetMousePosition(mousePos.X, mousePos.Y);
-		ThisPlayer->DeprojectMousePositionToWorld(worldpos, dir); 
-		//ThisPlayer->DeprojectScreenPositionToWorld(mousePos.X, mousePos.Y, worldpos, dir);
-
-		FVector StartLocation = ThisPlayer->GetCharacter()->GetActorLocation();
-
-		//FVector EndTest1 = (dir* (FVector(0, 0, worldpos.Z / dir.Z))) * -1;
-		FVector EndTest1 = dir * (CameraBoom->TargetArmLength);
-		FVector EndTest2 = worldpos + EndTest1;
-		FVector EndTest = FVector(ThisPlayer->GetCharacter()->GetActorLocation().X, EndTest2.Y, EndTest2.Z);
-
-		FVector MoreTest = EndTest - StartLocation;
-		//FVector MoreTest2 = MoreTest
-
-
-		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, StartLocation, StartLocation + MoreTest * 100, CamCollisionParams, CamObjectQueryParams);
-		DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Blue, true, 5);
-		
-
-		if (CamHitSuccess) {
-			DrawDebugLine(GetWorld(), StartLocation, StartLocation + MoreTest * 100, FColor::Green, true, 5);
-		}
-
-		//StartLocation + dir * 10000,
-
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Shot in side Person"));
-	}
 }
 
 void ARWBY_CodenameColorsCharacter::OnDodge() {
@@ -1291,19 +1258,15 @@ void ARWBY_CodenameColorsCharacter::OnDodge() {
 
 	
 	if (ThisPlayer) {
-		
+		DisableInput(ThisPlayer);
 		if (!(ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling())) {
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
 		}
 		else {
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 50000, false);
 		}
-		
 	
-		}
-		//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
-		//MyController->GetCharacter()->GetCharacterMovement()->AddImpulse(MyController->GetCharacter()->GetActorUpVector() * 20000, false);
-		//MyController->GetCharacter()->GetCharacterMovement()->Velocity += FVector(MyController->GetCharacter()->GetActorForwardVector().X,MyController->GetCharacter()->GetActorForwardVector().Y, 0) ;
+	}
 }
 
 void ARWBY_CodenameColorsCharacter::StartDodging() {
@@ -1465,6 +1428,22 @@ void ARWBY_CodenameColorsCharacter::Collect()
 
 }
 
+void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset(){
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+
+		int x;
+		int y;
+		FVector2D MousePos;
+
+		ThisPlayer->GetViewportSize(x, y);
+		ThisPlayer->GetMousePosition(MousePos.X, MousePos.Y);
+
+		OutAngle = (FMath::Atan((MousePos.Y - x) / (MousePos.Y - y))*(180 / 3.141592653589793238));
+
+	}
+}
 
 
 void ARWBY_CodenameColorsCharacter::ResetDust() {
@@ -1510,11 +1489,15 @@ void ARWBY_CodenameColorsCharacter::OnRep_Health() {
 
 void ARWBY_CodenameColorsCharacter::OnRep_Dodge() {
 
-	if (isDodging) {
-		GetWorldTimerManager().SetTimer(DodgeDelay, this, &ARWBY_CodenameColorsCharacter::OnDodge, .324f);
-		//OnDodge();
-	}
-	else {
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		if (isDodging) {
+			GetWorldTimerManager().SetTimer(DodgeDelay, this, &ARWBY_CodenameColorsCharacter::OnDodge, .324f);
+			//OnDodge();
+		}
+		else {
+			EnableInput(ThisPlayer);
+		}
 	}
 }
 
