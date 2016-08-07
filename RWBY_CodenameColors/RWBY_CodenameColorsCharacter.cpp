@@ -164,7 +164,9 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 
 	if (ThisPlayer) {
 
-		
+		if (SideView) {
+			ServerGetAngleOffset();
+		}
 
 		//Checks if there has been a wall detected, and if so then runs the method
 		if(bCanWallTrace) {
@@ -432,12 +434,14 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 			SideViewCameraComponent->Deactivate();
 			FollowCamera->Activate();
 			Perspective = ECameraType::Third;
+			SideView = false;
 			ThisPlayer->bShowMouseCursor = false;
 			break;
 		case(ECameraType::Third):
 			FollowCamera->Deactivate();
 			SideViewCameraComponent->Activate();
 			Perspective = ECameraType::Side;
+			SideView = true;
 			ThisPlayer->bShowMouseCursor = true;
 			break;
 	}
@@ -1155,9 +1159,6 @@ bool ARWBY_CodenameColorsCharacter::ServerRemoveCharacterState_Validate(ECharact
 	return true;
 }
 
-void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset()
-{
-}
 
 void ARWBY_CodenameColorsCharacter::OnHeal() {
 
@@ -1428,6 +1429,7 @@ void ARWBY_CodenameColorsCharacter::Collect()
 
 }
 
+/*
 void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset(){
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -1440,11 +1442,48 @@ void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset(){
 		ThisPlayer->GetViewportSize(x, y);
 		ThisPlayer->GetMousePosition(MousePos.X, MousePos.Y);
 
-		OutAngle = (FMath::Atan((MousePos.Y - x) / (MousePos.Y - y))*(180 / 3.141592653589793238));
+		if (MousePos.X > 400) {
+			OutAngle = -1 * (FMath::Atan((MousePos.Y - (y/2)) / (MousePos.X - (x/2)))*(180 / 3.141592653589793238));
+			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, -1, 0).Rotation());
+		}
+		else {
+			OutAngle = (FMath::Atan((MousePos.Y - (y/2)) / (MousePos.X - (x/2)))*(180 / 3.141592653589793238));
+			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, 1, 0).Rotation());
+		}
+
+	}
+}
+*/
+
+void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Implementation() {
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+
+		int x;
+		int y;
+		FVector2D MousePos;
+
+		ThisPlayer->GetViewportSize(x, y);
+		ThisPlayer->GetMousePosition(MousePos.X, MousePos.Y);
+
+		
+		if (MousePos.X > 400) {
+			OutAngle = -1 * (FMath::Atan((MousePos.Y - (y / 2)) / (MousePos.X - (x / 2)))*(180 / 3.141592653589793238));
+			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, -1, 0).Rotation());
+		}
+		else {
+			OutAngle = (FMath::Atan((MousePos.Y - (y / 2)) / (MousePos.X - (x / 2)))*(180 / 3.141592653589793238));
+			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, 1, 0).Rotation());
+		}
+		
 
 	}
 }
 
+bool ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Validate( ) {
+	return true;
+}
 
 void ARWBY_CodenameColorsCharacter::ResetDust() {
 
@@ -1592,8 +1631,8 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, PoweredUpState);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bMeleeAttacking);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bSliding);
-	
-
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, OutAngle);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, SideView);
 	
 }
 

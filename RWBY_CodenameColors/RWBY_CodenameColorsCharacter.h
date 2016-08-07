@@ -175,7 +175,7 @@ protected:
 	int16 FrozenPercent;
 
 	//Enum used to determine the camera/ movement state of the characters
-	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter")
+	UPROPERTY(BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 	TEnumAsByte<ECameraType::Type> Perspective;
 
 	//Boolean used to determine the dodging
@@ -229,59 +229,65 @@ protected:
 
 	FTimerHandle TimerHandler_Healing;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		float MaxAmmo;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(ReplicatedUsing = OnRep_Ammo, BlueprintReadWrite)
 		float CurrentAmmo;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool Shooting;
 
 	// the state of character true if powered up
-	UPROPERTY(ReplicatedUsing=OnRep_Dust)
+	UPROPERTY(ReplicatedUsing=OnRep_Dust, BlueprintReadWrite)
 		bool bIsPoweredUp;
 
 	// the state of character true if powered up
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bCanPickupDust;
 
 	// the state of character true if powered up
-	UPROPERTY(ReplicatedUsing=OnRep_Health)
+	UPROPERTY(ReplicatedUsing=OnRep_Health, BlueprintReadWrite)
 		bool bCanHeal;
 
-	UPROPERTY(ReplicatedUsing=OnRep_Ledge)
+	UPROPERTY(ReplicatedUsing=OnRep_Ledge, BlueprintReadWrite)
 		bool bCanWallTrace;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bCanClimb;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bHanging;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bClimbing;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bDoneClimbing;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Trip)
+	UPROPERTY(ReplicatedUsing = OnRep_Trip, BlueprintReadWrite)
 		bool bLedgeTrip;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Trip)
+	UPROPERTY(ReplicatedUsing = OnRep_Trip, BlueprintReadWrite)
 		bool bFallDamage;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bCanWallSlide;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Slide)
 		bool bSliding;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bWallJumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
 	int32 Semblance;
+
+	UPROPERTY(Replicated, BlueprintReadWrite)
+	float OutAngle;
+
+	UPROPERTY(Replicated, BlueprintReadWrite)
+	bool SideView;
 
 public:
 	ARWBY_CodenameColorsCharacter();
@@ -464,4 +470,12 @@ protected:
 		void ServerRemoveCharacterState(ECharacterState::Type Target);
 		void ServerRemoveCharacterState_Implementation(ECharacterState::Type Target);
 		bool ServerRemoveCharacterState_Validate(ECharacterState::Type Target);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerGetAngleOffset();
+		void ServerGetAngleOffset_Implementation();
+		bool ServerGetAngleOffset_Validate();
+
+
+
 };
