@@ -98,7 +98,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	CharacterState = ECharacterState::Normal;
 
 	LastHitActor = nullptr;
-
+	SetCameraPerspective(true);
 	//CharacterStatusEffects.Add(ECharacterState::Normal);
 
 	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
@@ -165,7 +165,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 	if (ThisPlayer) {
 
 		if (SideView) {
-			ServerGetAngleOffset();
+			ClientGetMousePos();
 		}
 
 		//Checks if there has been a wall detected, and if so then runs the method
@@ -434,19 +434,31 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 			SideViewCameraComponent->Deactivate();
 			FollowCamera->Activate();
 			Perspective = ECameraType::Third;
-			SideView = false;
+			SetCameraPerspective(false);
 			ThisPlayer->bShowMouseCursor = false;
 			break;
 		case(ECameraType::Third):
 			FollowCamera->Deactivate();
 			SideViewCameraComponent->Activate();
 			Perspective = ECameraType::Side;
-			SideView = true;
+			SetCameraPerspective(true);
 			ThisPlayer->bShowMouseCursor = true;
 			break;
 	}
 
 }
+
+// Sets a new camera perspective to use
+void ARWBY_CodenameColorsCharacter::SetCameraPerspective_Implementation(bool NewCameraState) {
+
+	SideView = NewCameraState;
+
+}
+
+bool ARWBY_CodenameColorsCharacter::SetCameraPerspective_Validate(bool NewCameraState) {
+	return true;
+}
+
 
 //This Method is used to perform a wall slide on the server
 void ARWBY_CodenameColorsCharacter::PerformWallSlide(bool CanSlide) {
@@ -1455,7 +1467,7 @@ void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset(){
 }
 */
 
-void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Implementation() {
+void ARWBY_CodenameColorsCharacter::ClientGetMousePos_Implementation() {
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
@@ -1467,21 +1479,41 @@ void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Implementation() {
 		ThisPlayer->GetViewportSize(x, y);
 		ThisPlayer->GetMousePosition(MousePos.X, MousePos.Y);
 
+		ServerGetAngleOffset(x / 2, y / 2, MousePos.X, MousePos.Y);
 		
 		if (MousePos.X > 400) {
-			OutAngle = -1 * (FMath::Atan((MousePos.Y - (y / 2)) / (MousePos.X - (x / 2)))*(180 / 3.141592653589793238));
+			//OutAngle = -1 * (FMath::Atan((MouseY - CenterY) / (MouseX - CenterX))*(180 / 3.141592653589793238));
 			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, -1, 0).Rotation());
 		}
 		else {
-			OutAngle = (FMath::Atan((MousePos.Y - (y / 2)) / (MousePos.X - (x / 2)))*(180 / 3.141592653589793238));
+			//OutAngle = (FMath::Atan((MouseY - CenterY) / (MouseX - CenterX))*(180 / 3.141592653589793238));
 			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, 1, 0).Rotation());
 		}
-		
 
 	}
 }
 
-bool ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Validate( ) {
+bool ARWBY_CodenameColorsCharacter::ClientGetMousePos_Validate( ) {
+	return true;
+}
+
+
+void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Implementation(float CenterX, float CenterY, float MouseX, float MouseY) {
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		if (MouseX > 400) {
+			OutAngle = -1 * (FMath::Atan((MouseY - CenterY) / (MouseX - CenterX))*(180 / 3.141592653589793238));
+			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, -1, 0).Rotation());
+		}
+		else {
+			OutAngle = (FMath::Atan((MouseY - CenterY) / (MouseX - CenterX))*(180 / 3.141592653589793238));
+			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, 1, 0).Rotation());
+		}
+	}
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Validate(float CenterX, float CenterY, float MouseX, float MouseY) {
 	return true;
 }
 
@@ -1633,6 +1665,7 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bSliding);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, OutAngle);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, SideView);
-	
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Perspective);
+
 }
 

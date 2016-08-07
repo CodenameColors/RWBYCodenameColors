@@ -471,11 +471,19 @@ protected:
 		void ServerRemoveCharacterState_Implementation(ECharacterState::Type Target);
 		bool ServerRemoveCharacterState_Validate(ECharacterState::Type Target);
 
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientGetMousePos();
+		void ClientGetMousePos_Implementation();
+		bool ClientGetMousePos_Validate();
+
+	UFUNCTION(Reliable, Server, WithValidation)
+		void SetCameraPerspective(bool NewCameraState);
+		void SetCameraPerspective_Implementation(bool NewCameraState);
+		bool SetCameraPerspective_Validate(bool NewCameraState);
+
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerGetAngleOffset();
-		void ServerGetAngleOffset_Implementation();
-		bool ServerGetAngleOffset_Validate();
-
-
+		void ServerGetAngleOffset(float CenterX, float CenterY, float MouseX, float MouseY);
+		void ServerGetAngleOffset_Implementation(float CenterX, float CenterY, float MouseX, float MouseY);
+		bool ServerGetAngleOffset_Validate(float CenterX, float CenterY, float MouseX, float MouseY);
 
 };
