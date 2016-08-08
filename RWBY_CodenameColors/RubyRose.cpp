@@ -226,7 +226,7 @@ void ARubyRose::OnAttack(){
 				if (LastHitActor != HitChar) {
 					DealDamage(10, MeleeAttackHitResult);
 					LastHitActor = HitChar;
-					Semblance += 10 * 1.7;
+					Semblance += 15;
 				}
 			}
 		}
@@ -320,55 +320,79 @@ void ARubyRose::OnFire() {
 	* Makes the line be drawn on the normal, and not a define vector GREAT for attaking animations
 	**/
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		if (!SideView) {
 
-	if (Perspective == ECameraType::Third) {
+			bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
+			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Blue, true, 1);
+			if (CamHitSuccess) {
+				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
+				DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Green, true, 1);
 
-		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
-		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Blue, true, 1);
-		if (CamHitSuccess) {
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
-			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Green, true, 1);
+				UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
 
-			UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
+				//if what was hit, was indeed a capsule component
+				if (SkeletalTest) {
+					//debuging...
+					//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *HitResult.GetComponent()->GetName());
+					//UE_LOG(LogClass, Log, TEXT(" Skeletal Mesh Hit:  %s "), *HitResult.GetComponent()->GetName());
 
-			//if what was hit, was indeed a capsule component
-			if (SkeletalTest) {
-				//debuging...
-				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *HitResult.GetComponent()->GetName());
-				//UE_LOG(LogClass, Log, TEXT(" Skeletal Mesh Hit:  %s "), *HitResult.GetComponent()->GetName());
+					//Cast the Hit result to the ARWBY_TestingCharacter class to test
+					ARWBY_CodenameColorsCharacter* RWBYCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
+					//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
+					if (RWBYCharacter) {
 
-				//Cast the Hit result to the ARWBY_TestingCharacter class to test
-				ARWBY_CodenameColorsCharacter* TestCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
-				//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
-				if (TestCharacter) {
+						DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Red, true, 1);
 
-					DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Red, true, 1);
+						TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+						FDamageEvent DamageEvent(ValidDamageTypeClass);
+
+						APlayerController* MyController = Cast<APlayerController>(GetController());
+
+						//Base Damage Dealer
+						RWBYCharacter->GetShot(21, DamageEvent, MyController, this);
+						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("RWBY Shot"));
+						Semblance += 10;
+
+					}
+				}
+
+			}
+		}
+		else if (SideView) {
+
+			FVector StartLocation = GetMesh()->GetSocketLocation(FName("GunTip"));
+			FVector EndLocation = StartLocation + ThisPlayer->GetCharacter()->GetActorForwardVector() * 1000;
+			
+			EndLocation = EndLocation.RotateAngleAxis(OutAngle, FVector(0, -1, 0));
+			
+			FVector Direction = (EndLocation - StartLocation) * 50000;
+
+			//EndLocation = EndLocation.SafeNormal();
+
+			bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, StartLocation, Direction, CamCollisionParams, CamObjectQueryParams);
+			DrawDebugLine(GetWorld(), StartLocation, Direction, FColor::Blue, true, 1);
+
+			if (CamHitSuccess) {
+				DrawDebugLine(GetWorld(), StartLocation, Direction, FColor::Green, true, 1);
+				ARWBY_CodenameColorsCharacter* RWBYCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
+				if (RWBYCharacter) {
 
 					TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 					FDamageEvent DamageEvent(ValidDamageTypeClass);
 
 					APlayerController* MyController = Cast<APlayerController>(GetController());
 
-					//Base Damage Dealer
-					TestCharacter->GetShot(21, DamageEvent, MyController, this);
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("RWBY Shot"));
+					//Base Damage Dealerdw
+					RWBYCharacter->GetShot(28, DamageEvent, MyController, this);
+					Semblance += 16;
 
+					DrawDebugLine(GetWorld(), StartLocation, Direction, FColor::Red, true, 1);
 				}
+
 			}
 
 		}
-	}
-	else if (Perspective == ECameraType::Side) {
-
-		FVector StartLocation = GetMesh()->GetSocketLocation(FName("GunTip"));
-		FVector EndLocation = StartLocation + ThisPlayer->GetCharacter()->GetActorForwardVector() * 1000;
-
-		EndLocation = EndLocation.RotateAngleAxis(OutAngle, FVector(0, -1, 0));
-
-
-		//bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
-		DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Blue, true, 1);
-
 	}
 }
 
@@ -404,6 +428,7 @@ void ARubyRose::OnRep_MeleeAttack() {
 		
 	}
 	else {
+		//if()
 		GetMesh()->GetAnimInstance()->Montage_Play(Melee, 1);
 	}
 
