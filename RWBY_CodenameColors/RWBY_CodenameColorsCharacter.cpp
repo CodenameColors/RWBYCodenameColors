@@ -165,7 +165,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 	if (ThisPlayer) {
 
 		if (SideView ) {
-			//ClientGetMousePos();
+			ClientGetMousePos();
 		}
 
 		//Checks if there has been a wall detected, and if so then runs the method
@@ -265,7 +265,7 @@ void ARWBY_CodenameColorsCharacter::StartJump(){
 		}
 		//slide if can't clumb at the current moment
 		else if (bSliding) {
-			//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			PerformWallJump(true);
 		}
 		else {
@@ -775,15 +775,8 @@ void ARWBY_CodenameColorsCharacter::ServerAddVelocity_Implementation() {
 	if (ThisPlayer) {
 		if (bWallJumping) {
 
-			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-			//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.operator+=(FVector(0, ThisPlayer->GetCharacter()->GetActorForwardVector().Y, -2) * (750 * -1));
-			FVector JumpAngle = ThisPlayer->GetCharacter()->GetActorForwardVector() * -100;
-			//FVector JumpAngle = ThisPlayer->GetCharacter()->GetActorUpVector() * -75;
-			JumpAngle += ThisPlayer->GetCharacter()->GetActorUpVector() * 150;
-
-			
-			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(JumpAngle * 7, true);
-			//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity = ThisPlayer->GetCharacter()->GetActorForwardVector() *-500;
+			//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.operator+=(FVector(0, ThisPlayer->GetCharacter()->GetActorForwardVector().Y, -2) * (750 * -1));
 		}
 		bWallJumping = false;
 	}
