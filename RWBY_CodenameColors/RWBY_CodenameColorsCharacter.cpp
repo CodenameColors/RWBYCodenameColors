@@ -783,6 +783,7 @@ void ARWBY_CodenameColorsCharacter::ServerAddVelocity_Implementation() {
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(JumpAngle * 7, true);
 			//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity = ThisPlayer->GetCharacter()->GetActorForwardVector() *-500;
 		}
+		//
 		bWallJumping = false;
 	}
 }
