@@ -164,7 +164,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 
 	if (ThisPlayer) {
 
-		if (SideView ) {
+		if (SideView) {
 			ClientGetMousePos();
 		}
 
@@ -1479,9 +1479,9 @@ void ARWBY_CodenameColorsCharacter::ClientGetMousePos_Implementation() {
 		ThisPlayer->GetViewportSize(x, y);
 		ThisPlayer->GetMousePosition(MousePos.X, MousePos.Y);
 
-		ServerGetAngleOffset(x/2, y/2, MousePos.X, MousePos.Y);
+		ServerGetAngleOffset(x / 2, y / 2, MousePos.X, MousePos.Y);
 		
-		if (MousePos.X > x/2) {
+		if (MousePos.X > 400) {
 			//OutAngle = -1 * (FMath::Atan((MouseY - CenterY) / (MouseX - CenterX))*(180 / 3.141592653589793238));
 			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, -1, 0).Rotation());
 		}
@@ -1502,7 +1502,7 @@ void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Implementation(float Ce
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
-		if (MouseX > CenterX) {
+		if (MouseX > 400) {
 			OutAngle = -1 * (FMath::Atan((MouseY - CenterY) / (MouseX - CenterX))*(180 / 3.141592653589793238));
 			ThisPlayer->GetCharacter()->SetActorRotation(FVector(0, -1, 0).Rotation());
 		}
@@ -1666,9 +1666,6 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, OutAngle);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, SideView);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Perspective);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Semblance);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, SemblanceState);
 
-	
 }
 

@@ -250,10 +250,10 @@ protected:
 	UPROPERTY(ReplicatedUsing=OnRep_Health, BlueprintReadWrite)
 		bool bCanHeal;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Ledge, BlueprintReadWrite)
+	UPROPERTY(ReplicatedUsing=OnRep_Ledge, BlueprintReadWrite)
 		bool bCanWallTrace;
 
-	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
+	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bCanClimb;
 
 	UPROPERTY(Replicated, BlueprintReadWrite)
@@ -280,12 +280,8 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bWallJumping;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
 	int32 Semblance;
-
-	//true = activated semblance
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
-	bool SemblanceState;
 
 	UPROPERTY(Replicated, BlueprintReadWrite)
 	float OutAngle;
