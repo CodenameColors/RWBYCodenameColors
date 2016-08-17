@@ -250,19 +250,19 @@ protected:
 	UPROPERTY(ReplicatedUsing=OnRep_Health, BlueprintReadWrite)
 		bool bCanHeal;
 
-	UPROPERTY(ReplicatedUsing=OnRep_Ledge, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, ReplicatedUsing=OnRep_Ledge, BlueprintReadWrite)
 		bool bCanWallTrace;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 		bool bCanClimb;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 		bool bHanging;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 		bool bClimbing;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 		bool bDoneClimbing;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Trip, BlueprintReadWrite)
@@ -274,10 +274,10 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bCanWallSlide;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Slide)
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Slide)
 		bool bSliding;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(ReplicatedUsing = OnRep_WallJump, BlueprintReadWrite)
 		bool bWallJumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
@@ -374,6 +374,9 @@ public:
 
 	UFUNCTION()
 		void OnRep_Slide();
+
+	UFUNCTION()
+		void OnRep_WallJump();
 
 	UFUNCTION()
 		virtual void OnRep_MeleeAttack();

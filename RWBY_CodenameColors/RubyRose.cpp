@@ -374,27 +374,40 @@ void ARubyRose::OnFire() {
 
 void ARubyRose::OnRep_Task() {
 
-	switch (Task) {
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		switch (Task) {
 
-	case(ETask::None) :
-		Shooting = false;
+		case(ETask::None) :
+			Shooting = false;
 
-		if (Perspective == ECameraType::Side) {
-			GetCharacterMovement()->MaxWalkSpeed = 450;
+			if (Perspective == ECameraType::Side) {
+				GetCharacterMovement()->MaxWalkSpeed = 450;
+			}
+			else if (Perspective == ECameraType::Third) {
+				GetCharacterMovement()->MaxWalkSpeed = 600;
+			}
+			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			ThisPlayer->GetCharacter()->EnableInput(ThisPlayer);
+			break;
+		case(ETask::Shooting) :
+			if (CurrentAmmo > 0) {
+				OnFire();
+				Shooting = true;
+
+				if (!ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling()) {
+					GetCharacterMovement()->MaxWalkSpeed = 0;
+					GetCharacterMovement()->DisableMovement();
+					ThisPlayer->GetCharacter()->DisableInput(ThisPlayer);
+					//ThisPlayer->Mouse
+				}
+				else {
+					//GetCharacterMovement()->DisableMovement();
+					ThisPlayer->GetCharacter()->DisableInput(ThisPlayer);
+				}
+			}
+							  break;
 		}
-		else if(Perspective == ECameraType::Third ){
-			GetCharacterMovement()->MaxWalkSpeed = 600;
-		}
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		break;
-	case(ETask::Shooting) :
-		if (CurrentAmmo > 0) {
-			OnFire();
-			Shooting = true;
-			GetCharacterMovement()->MaxWalkSpeed = 0;
-			GetCharacterMovement()->DisableMovement();
-		}
-		break;
 	}
 }
 

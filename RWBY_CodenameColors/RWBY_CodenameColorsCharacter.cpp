@@ -175,17 +175,10 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 		}
 
 		//checks to see if the character can wall slide
-		if (bCanWallSlide) {
+		if (bCanWallSlide && ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()) {
 			//if so then runs this wall slide method
 			PerformWallSlide(bCanWallSlide);
 		}
-
-		//checks to see if the character has a position to climb to
-		if (bCanClimb) {
-			//if so then climb/ run this method
-			LedgeGrab();
-		}
-
 
 		if (ThisPlayer->GetCharacter() != nullptr) {
 			if (ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling() && ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -2200) {
@@ -216,11 +209,12 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 			bCanWallTrace = false;
 			bClimbing = false;
 			bHanging = false;
+			bSliding = false;
 
 			//AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
-			ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
+			//ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
 			//UKismetSystemLibrary::MoveComponentTo(RootComponent, ClimbPosition, CharRot, false, false, .34f, EMoveComponentAction::Move, LatentInfo);
 		}
 	}
@@ -259,12 +253,13 @@ void ARWBY_CodenameColorsCharacter::StartJump(){
 
 			FVector Up = FVector(ClimbPosition.X, ThisPlayer->GetCharacter()->GetActorLocation().Y, ClimbPosition.Z - 50);
 
-
 			UKismetSystemLibrary::MoveComponentTo(RootComponent, Up, CharRot, false, false, .84f, EMoveComponentAction::Move, LatentInfo);
+
+			bCanWallTrace = false;
 			//UKismetSystemLibrary::MoveComponentTo(RootComponent, ClimbPosition, CharRot, false, false, .34f, EMoveComponentAction::Move, LatentInfo);
 		}
 		//slide if can't clumb at the current moment
-		else if (bSliding) {
+		else if (bSliding && !bHanging) {
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			PerformWallJump(true);
 		}
@@ -306,7 +301,7 @@ void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 		ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 		bHanging = false;
 		bCanClimb = false;
-		bCanWallTrace = false;
+		//bCanWallTrace = false;
 		bClimbing = false;
 	}
 	
@@ -319,8 +314,10 @@ bool ARWBY_CodenameColorsCharacter::OnCrouchStart_Validate() {
 
 void ARWBY_CodenameColorsCharacter::OnCrouchEnd(){
 
-	
-	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnRep_Slide, .15f);
+	if (bHanging || bCanClimb) {
+		GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnRep_Slide, .15f);
+
+	}
 }
 
 // Moves the Charcter forward
@@ -468,6 +465,8 @@ void ARWBY_CodenameColorsCharacter::PerformWallSlide(bool CanSlide) {
 		//if so then run this method on the server
 		ServerPerformWallSlide(CanSlide);
 	}
+
+	bSliding = true;
 	//call the slide method, which will replicate across all clients on the server
 	OnRep_Slide();
 }
@@ -488,13 +487,12 @@ void ARWBY_CodenameColorsCharacter::OnWallSlide() {
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 
 	if (ThisPlayer) {
-		if (!bHanging && !bCanClimb && !bCanClimb) {
+		if (!bHanging && !bCanClimb) {
+
 			if (ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -50) {
-				bSliding = true;
 				ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z = -200;
 				//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
 				ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.X = 0;
-
 				//ThisPlayer->GetCharacter()->SetActorRotation(ThisPlayer->GetCharacter()->GetActorRotation() * -1);
 
 			}
@@ -586,6 +584,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 			//Check to see if the Ray Trace hit something/ Sphere Trace
 			if (WallHit) {
 				//If then we can slide down it
+				//if()
 				bCanWallSlide = true;
 				//Reseting the start location to be that of the end hit location
 				FVector Location = Location + HitOut.Location;
@@ -619,9 +618,10 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 		if (ThePC) {
 			//Set a bool to the state of the ray trace
 			bool WallHit = ThePC->GetWorld()->LineTraceSingle(HitDown, DownStart, LocationDown, TraceParams, CamObjectQueryParams);
+			//bool WallHit = ThePC->GetWorld()->SweepSingle(HitDown, DownStart, LocationDown, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
 			//DEBUG PURPOSE UNCOMMENT IF NEED BE
-			//DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, .01666);
-			//DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, .01666);
+			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, 1);
+			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, 1);
 
 			//Check to see if the Ray Trace hit something
 			if (WallHit) {
@@ -634,8 +634,8 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 				if (!(HitDown.Distance > 120)) {
 
 					//DEBUGS
-					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, true, .001666);
-					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, .001666);
+					DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Green, false, 1);
+					DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Green, false, 1);
 
 					//If we have found a suitable end climbing position set
 					// set the character to be able to climb, also stop ray tracing
@@ -645,7 +645,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 					//Creating a location to set the character location to, This is an offset of the final location
 					// and there the character wil hang off the edge
 					FVector LocationOffset = FVector(DownStart.X, DownStart.Y - ThisPlayer->GetCharacter()->GetActorForwardVector().Y,
-						DownStart.Z - ThisPlayer->GetCharacter()->GetActorUpVector().Z * 130);
+													DownStart.Z - ThisPlayer->GetCharacter()->GetActorUpVector().Z * 130);
 					LocationOffset -= ThisPlayer->GetCharacter()->GetActorForwardVector() * 50;
 
 					//Once the player has reached this position set their movement mode to flying
@@ -662,8 +662,9 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 					ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
 
 					//At this point set the hanging variable to true in order to tell the anim blueprint to
-					// run the haning animation
+					// run the hanging animation
 					bHanging = true;
+					bSliding = false;
 					//Since you are hanging you can climb, so set climbing to try
 					bCanClimb = true;
 					ClimbPosition = DownStart + ThisPlayer->GetCharacter()->GetActorUpVector() * 90;
@@ -744,7 +745,8 @@ void ARWBY_CodenameColorsCharacter::PerformWallJump(bool CanJump) {
 		ServerPerformWallJump(CanJump);
 	}
 
-	OnWallJump();
+	bWallJumping = true;
+	OnRep_WallJump();
 }
 
 void ARWBY_CodenameColorsCharacter::ServerPerformWallJump_Implementation(bool CanJump){
@@ -757,14 +759,11 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformWallJump_Validate(bool CanJump)
 
 void ARWBY_CodenameColorsCharacter::OnWallJump() {
 
-	bWallJumping = true;
-	
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
 		ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z = -1;
 	}
-	
 	
 	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::ServerAddVelocity, .4367f);
 }
@@ -785,6 +784,7 @@ void ARWBY_CodenameColorsCharacter::ServerAddVelocity_Implementation() {
 		}
 		bWallJumping = false;
 	}
+	
 }
 
 bool ARWBY_CodenameColorsCharacter::ServerAddVelocity_Validate() {
@@ -1629,16 +1629,20 @@ void ARWBY_CodenameColorsCharacter::OnRep_Trip(){
 
 void ARWBY_CodenameColorsCharacter::OnRep_Slide() {
 
-	if (!bHanging) {
-		bCanWallTrace = true;
+	//if (!bHanging) {
+	//	bCanWallTrace = true;
 		//bCanWallSlide = true;
-		
+	
 		OnWallSlide();
-	}
+	//}
 }
 
 void ARWBY_CodenameColorsCharacter::OnRep_MeleeAttack() {
 	//OnAttack();
+}
+
+void ARWBY_CodenameColorsCharacter::OnRep_WallJump() {
+	OnWallJump();
 }
 
 /* Replication Method (Properties)
@@ -1671,6 +1675,10 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, OutAngle);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, SideView);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Perspective);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bWallJumping);
+
+	
+
 
 }
 
