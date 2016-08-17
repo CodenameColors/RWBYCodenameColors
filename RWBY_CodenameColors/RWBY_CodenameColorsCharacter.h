@@ -89,7 +89,14 @@ class ARWBY_CodenameColorsCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* ThirdPersonCameraBoom;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning", meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* SphereWallTrace;
 
+	UFUNCTION()
+		void OnOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintCallable, Category = "RosePetal", meta = (AllowPrivateAccess = "true"))
+		void OnOverlapEnd(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 protected:
 	
@@ -275,7 +282,7 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bCanWallSlide;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Slide)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Slide)
 		bool bSliding;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WallJump, BlueprintReadWrite)

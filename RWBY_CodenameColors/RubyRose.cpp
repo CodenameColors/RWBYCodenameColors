@@ -118,8 +118,16 @@ bool ARubyRose::ServerPerformDodge_Validate(bool bDodging) {
 void ARubyRose::StartDodging(){
 	PerformDodge(true);
 
-	FTimerHandle StopDodge;
-	GetWorldTimerManager().SetTimer(StopDodge, this, &ARubyRose::StopDodging, .55, false);
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		FTimerHandle StopDodge;
+		if (!ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling()) {
+			GetWorldTimerManager().SetTimer(StopDodge, this, &ARubyRose::StopDodging, .55, false);
+		}
+		else {
+			GetWorldTimerManager().SetTimer(StopDodge, this, &ARubyRose::StopDodging, .4, false);
+		}
+	}
 
 }
 

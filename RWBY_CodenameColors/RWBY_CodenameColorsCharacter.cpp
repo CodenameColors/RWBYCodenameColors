@@ -15,6 +15,14 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
+
+	SphereWallTrace = CreateDefaultSubobject<USphereComponent>(TEXT("Trigger Sphere"));
+	SphereWallTrace->SetSphereRadius(60);
+	SphereWallTrace->AttachTo(RootComponent);
+
+	SphereWallTrace->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnOverlap);
+	SphereWallTrace->OnComponentEndOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnOverlapEnd);
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -106,6 +114,26 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+}
+
+void ARWBY_CodenameColorsCharacter::OnOverlap(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult & SweepResult) {
+	
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Entered Wall"));
+
+	bCanWallTrace = true;
+
+}
+
+void ARWBY_CodenameColorsCharacter::OnOverlapEnd(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Exited Wall"));
+
+	bCanWallTrace = false;
+	bCanClimb = false;
+	bCanWallSlide = false;
+	bSliding = false;
+	bHanging = false;
+	bWallJumping = false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -488,13 +516,18 @@ void ARWBY_CodenameColorsCharacter::OnWallSlide() {
 
 	if (ThisPlayer) {
 		if (!bHanging && !bCanClimb) {
-
 			if (ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -50) {
-				ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z = -200;
-				//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
-				ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.X = 0;
-				//ThisPlayer->GetCharacter()->SetActorRotation(ThisPlayer->GetCharacter()->GetActorRotation() * -1);
-
+				if (SideView) {
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z = -200;
+					//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.X = 0;
+					//ThisPlayer->GetCharacter()->SetActorRotation(ThisPlayer->GetCharacter()->GetActorRotation() * -1);
+				}
+				else {
+					ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z = -200;
+					//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
+					//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.X = 0;
+				}
 			}
 		}
 	}
@@ -601,7 +634,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 		//TRACE DOWN
 
 		//Find the middle location of the character's forward offset
-		const FVector LocationDown = Start + ThisPlayer->GetCharacter()->GetActorForwardVector() * 50;     //GetMesh()->GetSocketLocation(FName("Hip1"));
+		const FVector LocationDown = Start + ThisPlayer->GetCharacter()->GetActorForwardVector() * 80;     //GetMesh()->GetSocketLocation(FName("Hip1"));
 
 		//Use the Forward offset location and create a vector 150 units up from it
 		const FVector DownStart = ThisPlayer->GetCharacter()->GetActorUpVector() *150+ LocationDown;
@@ -764,7 +797,9 @@ void ARWBY_CodenameColorsCharacter::OnWallJump() {
 	if (ThisPlayer) {
 		ThisPlayer->GetCharacter()->GetMovementComponent()->Velocity.Z = -1;
 	}
-	
+
+	bSliding = false;
+	bCanWallSlide = false;
 	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::ServerAddVelocity, .4367f);
 }
 
@@ -772,6 +807,8 @@ void ARWBY_CodenameColorsCharacter::ServerAddVelocity_Implementation() {
 	
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
+
+
 		if (bWallJumping) {
 
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
