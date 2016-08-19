@@ -192,7 +192,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 
 	if (ThisPlayer) {
 
-		if (SideView) {
+		if (SideView && !bCanWallTrace) {
 			//ClientGetMousePos();
 		}
 
@@ -324,15 +324,19 @@ void ARWBY_CodenameColorsCharacter::StopJump() {
 void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		if (bHanging) {
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
-	if (bHanging) {
-		ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		bHanging = false;
-		bCanClimb = false;
-		//bCanWallTrace = false;
-		bClimbing = false;
+			bCanWallTrace = false;
+			bCanClimb = false;
+			bSliding = false;
+			bHanging = false;
+			//bWallJumping = false;
+
+			//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() *-170, true);
+		}
 	}
-	
 
 }
 //This method allows the method above to occur multiplayer wise
@@ -341,11 +345,8 @@ bool ARWBY_CodenameColorsCharacter::OnCrouchStart_Validate() {
 }
 
 void ARWBY_CodenameColorsCharacter::OnCrouchEnd(){
-
-	if (bHanging || bCanClimb) {
-		GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnRep_Slide, .15f);
-
-	}
+	
+	
 }
 
 // Moves the Charcter forward
@@ -572,92 +573,112 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 	}
 
 	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Silver, TEXT("WALL DETECTED"));
-		
+
 	//Find the Location of this socket, aka the Middle of the character
-		const FVector Location = GetMesh()->GetSocketLocation(FName("Hip"));
-		
-		AActor* ActorToIgnore = this; //ignore overlap events with ourself
-		 //Find the Location of this socket, aka the Middle of the character
-		const FVector Start = GetMesh()->GetSocketLocation(FName("Hip"));
-		//Create a vector, and set that vector equal to
-		//the middle of the character + Some other forward direction vector
-		const FVector End = Location + ThisPlayer->GetCharacter()->GetActorForwardVector() * 150;
-		//Set the the sphere trace radius
-		const float Radius = 20;
+	const FVector Location = GetMesh()->GetSocketLocation(FName("Hip"));
 
-		//const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("test"));
-		//gets the beginning socket
-		
-		//create a HitReResult
-		FHitResult HitOut;
-		//Makes the Ray Trace use our custom Colision Channel
-		ECollisionChannel TraceChannel = ECC_EngineTraceChannel1;
+	AActor* ActorToIgnore = this; //ignore overlap events with ourself
+	 //Find the Location of this socket, aka the Middle of the character
+	const FVector Start = GetMesh()->GetSocketLocation(FName("Hip"));
+	//Create a vector, and set that vector equal to
+	//the middle of the character + Some other forward direction vector
+	const FVector End = Location + ThisPlayer->GetCharacter()->GetActorForwardVector() * 150;
+	//Set the the sphere trace radius
+	const float Radius = 20;
+
+	//const USkeletalMeshSocket* MeleeSocket = GetMesh()->GetSocketByName(FName("test"));
+	//gets the beginning socket
+
+	//create a HitReResult
+	FHitResult HitOut;
+	//Makes the Ray Trace use our custom Colision Channel
+	ECollisionChannel TraceChannel = ECC_EngineTraceChannel1;
 
 
-		FCollisionQueryParams TraceParams(FName(TEXT("LedgeTrace")), true, ActorToIgnore);
-		TraceParams.bTraceComplex = true;
-		//TraceParams.bTraceAsyncScene = true;
-		TraceParams.bReturnPhysicalMaterial = false;
+	FCollisionQueryParams TraceParams(FName(TEXT("LedgeTrace")), true, ActorToIgnore);
+	TraceParams.bTraceComplex = true;
+	//TraceParams.bTraceAsyncScene = true;
+	TraceParams.bReturnPhysicalMaterial = false;
 
-		//Ignore Actors
-		TraceParams.AddIgnoredActor(ActorToIgnore);
+	//Ignore Actors
+	TraceParams.AddIgnoredActor(ActorToIgnore);
 
-		//Re-initialize hit info
-		HitOut = FHitResult(ForceInit);
+	//Re-initialize hit info
+	HitOut = FHitResult(ForceInit);
 
-		//Get World Source
-		TObjectIterator<AMyPlayerController> ThePC;
-		if (ThePC) {
-			//Set a bool to the state of the sphereTrace
-			bool WallHit = ThePC->GetWorld()->SweepSingle(HitOut, Start, End, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
+	//Get World Source
+	TObjectIterator<AMyPlayerController> ThePC;
+	if (ThePC) {
+		//Set a bool to the state of the sphereTrace
+		bool WallHit = ThePC->GetWorld()->SweepSingle(HitOut, Start, End, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
+		//DEBUG PURPOSE UNCOMMENT IF NEED BE
+		//DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Red, false, .01666);
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
+
+		//Check to see if the Ray Trace hit something/ Sphere Trace
+		if (WallHit) {
+			//If then we can slide down it
+			//if()
+			bCanWallSlide = true;
+			//Reseting the start location to be that of the end hit location
+			FVector Location = Location + HitOut.Location;
 			//DEBUG PURPOSE UNCOMMENT IF NEED BE
-			//DrawDebugSphere(GetWorld(), End, Radius, 10, FColor::Red, false, .01666);
-			//DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, .01666);
+			//DrawDebugSphere(GetWorld(), Location, Radius, 10, FColor::Red, false, .01666);
+			//DrawDebugLine(GetWorld(), Start, Location, FColor::Red, false, .01666);
 
-			//Check to see if the Ray Trace hit something/ Sphere Trace
-			if (WallHit) {
-				//If then we can slide down it
-				//if()
-				bCanWallSlide = true;
-				//Reseting the start location to be that of the end hit location
-				FVector Location = Location + HitOut.Location;
-				//DEBUG PURPOSE UNCOMMENT IF NEED BE
-				//DrawDebugSphere(GetWorld(), Location, Radius, 10, FColor::Red, false, .01666);
-				//DrawDebugLine(GetWorld(), Start, Location, FColor::Red, false, .01666);
+		}
+		else {
+			bCanWallSlide = false;
+		}
+	}
 
+	//TRACE DOWN
+
+	//Find the middle location of the character's forward offset
+	const FVector LocationDown = Start + ThisPlayer->GetCharacter()->GetActorForwardVector() * 75;     //GetMesh()->GetSocketLocation(FName("Hip1"));
+
+	//Use the Forward offset location and create a vector 150 units up from it
+	const FVector DownStart = ThisPlayer->GetCharacter()->GetActorUpVector() * 150 + LocationDown;
+	//Then just set end location to the the character forward offset
+	const FVector EndDown = Location;
+
+	//Create a new FHitResult
+	FHitResult HitDown;
+	FCollisionObjectQueryParams CamObjectQueryParams;
+
+	//Re-initialize hit info
+	HitDown = FHitResult(ForceInit);
+
+	if (ThePC) {
+		//Set a bool to the state of the ray trace
+		bool WallHit = ThePC->GetWorld()->LineTraceSingle(HitDown, DownStart, LocationDown, TraceParams, CamObjectQueryParams);
+		//bool WallHit = ThePC->GetWorld()->SweepSingle(HitDown, DownStart, LocationDown, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
+		//DEBUG PURPOSE UNCOMMENT IF NEED BE
+		DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, 1);
+		DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, 1);
+
+		//Check to see if the Ray Trace hit something
+		if (WallHit) {
+
+
+			FHitResult CeliingCheck;
+			FCollisionObjectQueryParams CeilingObjectQueryParams;
+
+			bool bCeilingHit = ThePC->GetWorld()->LineTraceSingle(CeliingCheck, Start, Start + ThisPlayer->GetCharacter()->GetActorUpVector() * 250, TraceParams, CamObjectQueryParams);
+
+			if (bCeilingHit) {
+
+				bCanClimb = false;
+				bSliding = false;
+				bHanging = false;
+				bWallJumping = false;
+
+				DrawDebugLine(GetWorld(), Start, Start + ThisPlayer->GetCharacter()->GetActorUpVector() * 250, FColor::Red, false, 1);
+				DrawDebugSphere(GetWorld(), Start + ThisPlayer->GetCharacter()->GetActorUpVector() * 250, Radius, 10, FColor::Red, false, 1);
+ 
 			}
 			else {
-				bCanWallSlide = false;
-			}
-		}
 
-		//TRACE DOWN
-
-		//Find the middle location of the character's forward offset
-		const FVector LocationDown = Start + ThisPlayer->GetCharacter()->GetActorForwardVector() * 80;     //GetMesh()->GetSocketLocation(FName("Hip1"));
-
-		//Use the Forward offset location and create a vector 150 units up from it
-		const FVector DownStart = ThisPlayer->GetCharacter()->GetActorUpVector() *150+ LocationDown;
-		//Then just set end location to the the character forward offset
-		const FVector EndDown = Location;
-
-		//Create a new FHitResult
-		FHitResult HitDown;
-		FCollisionObjectQueryParams CamObjectQueryParams;
-
-		//Re-initialize hit info
-		HitDown = FHitResult(ForceInit);
-
-		if (ThePC) {
-			//Set a bool to the state of the ray trace
-			bool WallHit = ThePC->GetWorld()->LineTraceSingle(HitDown, DownStart, LocationDown, TraceParams, CamObjectQueryParams);
-			//bool WallHit = ThePC->GetWorld()->SweepSingle(HitDown, DownStart, LocationDown, FQuat(), TraceChannel, FCollisionShape::MakeSphere(Radius), TraceParams);
-			//DEBUG PURPOSE UNCOMMENT IF NEED BE
-			DrawDebugSphere(GetWorld(), DownStart, Radius, 10, FColor::Red, false, 1);
-			DrawDebugLine(GetWorld(), DownStart, LocationDown, FColor::Red, false, 1);
-
-			//Check to see if the Ray Trace hit something
-			if (WallHit) {
 
 				bCanWallSlide = false;
 				//Sets the final location of the character's climb
@@ -678,7 +699,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 					//Creating a location to set the character location to, This is an offset of the final location
 					// and there the character wil hang off the edge
 					FVector LocationOffset = FVector(DownStart.X, DownStart.Y - ThisPlayer->GetCharacter()->GetActorForwardVector().Y,
-													DownStart.Z - ThisPlayer->GetCharacter()->GetActorUpVector().Z * 130);
+						DownStart.Z - ThisPlayer->GetCharacter()->GetActorUpVector().Z * 130);
 					LocationOffset -= ThisPlayer->GetCharacter()->GetActorForwardVector() * 50;
 
 					//Once the player has reached this position set their movement mode to flying
@@ -688,7 +709,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 
 					//Set the Character Characters location to the Location offset
 					ThisPlayer->GetCharacter()->SetActorLocation(LocationOffset, false, false);
-					
+
 					FRotator Forward = ThisPlayer->GetCharacter()->GetActorRotation();
 
 					// Once your character has reached the hanging position then STOP THEIR MOMENTUM NOW
@@ -703,48 +724,48 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 					ClimbPosition = DownStart + ThisPlayer->GetCharacter()->GetActorUpVector() * 90;
 
 					//bClimbing = true;
-					
+
 				}
 
-		
-				else {
-					//bCanClimb = false;
-					//bCanWallSlide = true;
-				}
-
-					//if (!bHanging && !bCanClimb)
-						//PerformWallSlide(bCanWallSlide);
-					/*
-					if(ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()){
-
-					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Ledge Trip Detected"));
-
-					ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-					FRotator Forward = ThisPlayer->GetCharacter()->GetActorRotation();
-					ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
-
-					FVector LocationOffset = DownStart;
-					LocationOffset += ThisPlayer->GetCharacter()->GetActorUpVector() * 100;
-
-					ThisPlayer->GetCharacter()->SetActorLocation(LocationOffset, false, false);
-					ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-
-					//bDoneClimbing = false;
-					//bCanClimb = false;
-					//bCanWallTrace = false;
-					//bClimbing = false;
-					//bHanging = false;
-					bLedgeTrip = true;
-					OnRep_Trip();
-					}
-					*/
-					//ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
-				
-			
-				
-				//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 			}
+			//else {
+				//bCanClimb = false;
+				//bCanWallSlide = true;
+			//}
+
+				//if (!bHanging && !bCanClimb)
+					//PerformWallSlide(bCanWallSlide);
+				/*
+				if(ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()){
+
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Ledge Trip Detected"));
+
+				ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+				FRotator Forward = ThisPlayer->GetCharacter()->GetActorRotation();
+				ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
+
+				FVector LocationOffset = DownStart;
+				LocationOffset += ThisPlayer->GetCharacter()->GetActorUpVector() * 100;
+
+				ThisPlayer->GetCharacter()->SetActorLocation(LocationOffset, false, false);
+				ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+
+				//bDoneClimbing = false;
+				//bCanClimb = false;
+				//bCanWallTrace = false;
+				//bClimbing = false;
+				//bHanging = false;
+				bLedgeTrip = true;
+				OnRep_Trip();
+				}
+				*/
+				//ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
+
+
+
+			//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		}
+	}
 }
 
 int16 ARWBY_CodenameColorsCharacter::GetFrozenPercent() {
