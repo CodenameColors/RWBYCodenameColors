@@ -347,7 +347,7 @@ void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
 		//if (bHanging) {
-			
+			//
 			bHanging = false;
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			bCanWallTrace = false;
