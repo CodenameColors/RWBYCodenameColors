@@ -169,6 +169,8 @@ protected:
 
 	void GetAimAngle();
 
+	void PerformCrouch();
+
 	//returns true while in the middle of a dodge
 	UPROPERTY(BlueprintReadWrite, Replicated)
 	bool WhileDodging;
@@ -496,5 +498,10 @@ protected:
 		void ServerGetAngleOffset(float CenterX, float CenterY, float MouseX, float MouseY);
 		void ServerGetAngleOffset_Implementation(float CenterX, float CenterY, float MouseX, float MouseY);
 		bool ServerGetAngleOffset_Validate(float CenterX, float CenterY, float MouseX, float MouseY);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformCrouch();
+		void ServerPerformCrouch_Implementation();
+		bool ServerPerformCrouch_Validate();
 
 };

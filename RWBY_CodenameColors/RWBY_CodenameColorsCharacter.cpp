@@ -156,7 +156,7 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 	//InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
 	//InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
 
-	InputComponent->BindAction("Crouch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::OnCrouchStart);
+	InputComponent->BindAction("Crouch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::PerformCrouch);
 	InputComponent->BindAction("Crouch", IE_Released, this, &ARWBY_CodenameColorsCharacter::OnCrouchEnd);
 
 	InputComponent->BindAction("Healing", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartHealing);
@@ -320,22 +320,43 @@ void ARWBY_CodenameColorsCharacter::StopJump() {
 	JumpKeyHoldTime = 0.0f;
 }
 
+void ARWBY_CodenameColorsCharacter::PerformCrouch() {
+
+	bHanging = false;
+	bCanWallTrace = false;
+	bCanClimb = false;
+
+	if(GetNetMode() == NM_Client){
+		ServerPerformCrouch();
+	}
+	
+	OnCrouchStart();
+}
+
+void ARWBY_CodenameColorsCharacter::ServerPerformCrouch_Implementation() {
+	PerformCrouch();
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerPerformCrouch_Validate() {
+	return true;
+}
+
 //This method allows the player to crouch, or let go of a ledge (Multiplayer)
 void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
-		if (bHanging) {
+		//if (bHanging) {
+			
+			bHanging = false;
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-
 			bCanWallTrace = false;
 			bCanClimb = false;
-			bSliding = false;
-			bHanging = false;
+			//bSliding = false;
+		
 			//bWallJumping = false;
-
-			//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() *-170, true);
-		}
+			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() *-170, true);
+		//}
 	}
 
 }
