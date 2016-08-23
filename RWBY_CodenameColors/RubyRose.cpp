@@ -118,8 +118,16 @@ bool ARubyRose::ServerPerformDodge_Validate(bool bDodging) {
 void ARubyRose::StartDodging(){
 	PerformDodge(true);
 
-	FTimerHandle StopDodge;
-	GetWorldTimerManager().SetTimer(StopDodge, this, &ARubyRose::StopDodging, .55, false);
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		FTimerHandle StopDodge;
+		if (!ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling()) {
+			GetWorldTimerManager().SetTimer(StopDodge, this, &ARubyRose::StopDodging, .55, false);
+		}
+		else {
+			GetWorldTimerManager().SetTimer(StopDodge, this, &ARubyRose::StopDodging, .4, false);
+		}
+	}
 
 }
 
@@ -226,7 +234,7 @@ void ARubyRose::OnAttack(){
 				if (LastHitActor != HitChar) {
 					DealDamage(10, MeleeAttackHitResult);
 					LastHitActor = HitChar;
-					Semblance += 15;
+					Semblance += 10 * 1.7;
 				}
 			}
 		}
@@ -320,105 +328,94 @@ void ARubyRose::OnFire() {
 	* Makes the line be drawn on the normal, and not a define vector GREAT for attaking animations
 	**/
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
-	if (ThisPlayer) {
-		if (!SideView) {
 
-			bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
-			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Blue, true, 1);
-			if (CamHitSuccess) {
-				//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
-				DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Green, true, 1);
+	if (Perspective == ECameraType::Third) {
 
-				UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
+		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
+		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Blue, true, 1);
+		if (CamHitSuccess) {
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
+			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Green, true, 1);
 
-				//if what was hit, was indeed a capsule component
-				if (SkeletalTest) {
-					//debuging...
-					//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *HitResult.GetComponent()->GetName());
-					//UE_LOG(LogClass, Log, TEXT(" Skeletal Mesh Hit:  %s "), *HitResult.GetComponent()->GetName());
+			UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
 
-					//Cast the Hit result to the ARWBY_TestingCharacter class to test
-					ARWBY_CodenameColorsCharacter* RWBYCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
-					//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
-					if (RWBYCharacter) {
+			//if what was hit, was indeed a capsule component
+			if (SkeletalTest) {
+				//debuging...
+				//UE_LOG(LogClass, Warning, TEXT(" Hit:  %s "), *HitResult.GetComponent()->GetName());
+				//UE_LOG(LogClass, Log, TEXT(" Skeletal Mesh Hit:  %s "), *HitResult.GetComponent()->GetName());
 
-						DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Red, true, 1);
+				//Cast the Hit result to the ARWBY_TestingCharacter class to test
+				ARWBY_CodenameColorsCharacter* TestCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
+				//if what was hit is part of the ARWBY_testingCharacter Testing THEN...
+				if (TestCharacter) {
 
-						TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-						FDamageEvent DamageEvent(ValidDamageTypeClass);
-
-						APlayerController* MyController = Cast<APlayerController>(GetController());
-
-						//Base Damage Dealer
-						RWBYCharacter->GetShot(21, DamageEvent, MyController, this);
-						GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("RWBY Shot"));
-						Semblance += 10;
-
-					}
-				}
-
-			}
-		}
-		else if (SideView) {
-
-			FVector StartLocation = GetMesh()->GetSocketLocation(FName("GunTip"));
-			FVector EndLocation = StartLocation + ThisPlayer->GetCharacter()->GetActorForwardVector() * 1000;
-			
-			EndLocation = EndLocation.RotateAngleAxis(OutAngle, FVector(0, -1, 0));
-			
-			FVector Direction = (EndLocation - StartLocation) * 50000;
-
-			//EndLocation = EndLocation.SafeNormal();
-
-			bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, StartLocation, Direction, CamCollisionParams, CamObjectQueryParams);
-			DrawDebugLine(GetWorld(), StartLocation, Direction, FColor::Blue, true, 1);
-
-			if (CamHitSuccess) {
-				DrawDebugLine(GetWorld(), StartLocation, Direction, FColor::Green, true, 1);
-				ARWBY_CodenameColorsCharacter* RWBYCharacter = Cast<ARWBY_CodenameColorsCharacter>(CameraHit.GetActor());
-				if (RWBYCharacter) {
+					DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Red, true, 1);
 
 					TSubclassOf<UDamageType> const ValidDamageTypeClass = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 					FDamageEvent DamageEvent(ValidDamageTypeClass);
 
 					APlayerController* MyController = Cast<APlayerController>(GetController());
 
-					//Base Damage Dealerdw
-					RWBYCharacter->GetShot(28, DamageEvent, MyController, this);
-					Semblance += 16;
+					//Base Damage Dealer
+					TestCharacter->GetShot(21, DamageEvent, MyController, this);
+					GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("RWBY Shot"));
 
-					DrawDebugLine(GetWorld(), StartLocation, Direction, FColor::Red, true, 1);
 				}
-
 			}
 
 		}
+	}
+	else if (Perspective == ECameraType::Side) {
+
+		FVector StartLocation = GetMesh()->GetSocketLocation(FName("GunTip"));
+		FVector EndLocation = StartLocation + ThisPlayer->GetCharacter()->GetActorForwardVector() * 1000;
+
+		EndLocation = EndLocation.RotateAngleAxis(OutAngle, FVector(0, -1, 0));
+
+
+		//bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
+		DrawDebugLine(GetWorld(), StartLocation, EndLocation, FColor::Blue, true, 1);
+
 	}
 }
 
 void ARubyRose::OnRep_Task() {
 
-	switch (Task) {
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		switch (Task) {
 
-	case(ETask::None) :
-		Shooting = false;
+		case(ETask::None) :
+			Shooting = false;
 
-		if (Perspective == ECameraType::Side) {
-			GetCharacterMovement()->MaxWalkSpeed = 450;
+			if (Perspective == ECameraType::Side) {
+				GetCharacterMovement()->MaxWalkSpeed = 450;
+			}
+			else if (Perspective == ECameraType::Third) {
+				GetCharacterMovement()->MaxWalkSpeed = 600;
+			}
+			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+			ThisPlayer->GetCharacter()->EnableInput(ThisPlayer);
+			break;
+		case(ETask::Shooting) :
+			if (CurrentAmmo > 0) {
+				OnFire();
+				Shooting = true;
+
+				if (!ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling()) {
+					GetCharacterMovement()->MaxWalkSpeed = 0;
+					GetCharacterMovement()->DisableMovement();
+					ThisPlayer->GetCharacter()->DisableInput(ThisPlayer);
+					//ThisPlayer->Mouse
+				}
+				else {
+					//GetCharacterMovement()->DisableMovement();
+					ThisPlayer->GetCharacter()->DisableInput(ThisPlayer);
+				}
+			}
+							  break;
 		}
-		else if(Perspective == ECameraType::Third ){
-			GetCharacterMovement()->MaxWalkSpeed = 600;
-		}
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		break;
-	case(ETask::Shooting) :
-		if (CurrentAmmo > 0) {
-			OnFire();
-			Shooting = true;
-			GetCharacterMovement()->MaxWalkSpeed = 0;
-			GetCharacterMovement()->DisableMovement();
-		}
-		break;
 	}
 }
 
@@ -428,7 +425,6 @@ void ARubyRose::OnRep_MeleeAttack() {
 		
 	}
 	else {
-		//if()
 		GetMesh()->GetAnimInstance()->Montage_Play(Melee, 1);
 	}
 

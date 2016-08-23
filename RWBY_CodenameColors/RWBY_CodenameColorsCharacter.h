@@ -18,6 +18,7 @@ UENUM()
 			None, 
 			Shooting,
 			Reload,
+			Block,
 	};
 }
 
@@ -88,7 +89,14 @@ class ARWBY_CodenameColorsCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* ThirdPersonCameraBoom;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawning", meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* SphereWallTrace;
 
+	UFUNCTION()
+		void OnOverlap(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION(BlueprintCallable, Category = "RosePetal", meta = (AllowPrivateAccess = "true"))
+		void OnOverlapEnd(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 protected:
 	
@@ -160,6 +168,8 @@ protected:
 	void LedgeGrab();
 
 	void GetAimAngle();
+
+	void PerformCrouch();
 
 	//returns true while in the middle of a dodge
 	UPROPERTY(BlueprintReadWrite, Replicated)
@@ -256,13 +266,13 @@ protected:
 	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 		bool bCanClimb;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 		bool bHanging;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 		bool bClimbing;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite)
 		bool bDoneClimbing;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Trip, BlueprintReadWrite)
@@ -274,18 +284,14 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadWrite)
 		bool bCanWallSlide;
 
-	UPROPERTY(ReplicatedUsing = OnRep_Slide)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, ReplicatedUsing = OnRep_Slide)
 		bool bSliding;
 
-	UPROPERTY(Replicated, BlueprintReadWrite)
+	UPROPERTY(ReplicatedUsing = OnRep_WallJump, BlueprintReadWrite)
 		bool bWallJumping;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
 	int32 Semblance;
-
-	//true = activated semblance
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
-	bool SemblanceState;
 
 	UPROPERTY(Replicated, BlueprintReadWrite)
 	float OutAngle;
@@ -378,6 +384,9 @@ public:
 
 	UFUNCTION()
 		void OnRep_Slide();
+
+	UFUNCTION()
+		void OnRep_WallJump();
 
 	UFUNCTION()
 		virtual void OnRep_MeleeAttack();
@@ -489,5 +498,10 @@ protected:
 		void ServerGetAngleOffset(float CenterX, float CenterY, float MouseX, float MouseY);
 		void ServerGetAngleOffset_Implementation(float CenterX, float CenterY, float MouseX, float MouseY);
 		bool ServerGetAngleOffset_Validate(float CenterX, float CenterY, float MouseX, float MouseY);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformCrouch();
+		void ServerPerformCrouch_Implementation();
+		bool ServerPerformCrouch_Validate();
 
 };
