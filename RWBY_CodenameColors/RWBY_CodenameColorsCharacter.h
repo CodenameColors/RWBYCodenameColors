@@ -224,7 +224,7 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Task)
 		TEnumAsByte<ETask::Type> Task;
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Dust)
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Dust, BlueprintReadWrite)
 		TEnumAsByte<EDustType::Type> Dust;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
@@ -291,7 +291,7 @@ protected:
 		bool bWallJumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
-	int32 Semblance;
+	float Semblance;
 
 	UPROPERTY(Replicated, BlueprintReadWrite)
 	float OutAngle;

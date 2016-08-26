@@ -283,8 +283,6 @@ void ARWBY_CodenameColorsCharacter::StartJump(){
 
 			UKismetSystemLibrary::MoveComponentTo(RootComponent, Up, CharRot, false, false, .84f, EMoveComponentAction::Move, LatentInfo);
 
-			bCanWallTrace = false;
-			//UKismetSystemLibrary::MoveComponentTo(RootComponent, ClimbPosition, CharRot, false, false, .34f, EMoveComponentAction::Move, LatentInfo);
 		}
 		//slide if can't clumb at the current moment
 		else if (bSliding && !bHanging) {
@@ -322,7 +320,7 @@ void ARWBY_CodenameColorsCharacter::StopJump() {
 
 void ARWBY_CodenameColorsCharacter::PerformCrouch() {
 
-	bHanging = false;
+	//bHanging = false;
 	bCanWallTrace = false;
 	bCanClimb = false;
 
@@ -346,17 +344,17 @@ void ARWBY_CodenameColorsCharacter::OnCrouchStart_Implementation(){
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
-		//if (bHanging) {
+		if (bHanging) {
 			//
 			bHanging = false;
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			bCanWallTrace = false;
 			bCanClimb = false;
-			//bSliding = false;
+			bSliding = false;
 		
 			//bWallJumping = false;
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() *-170, true);
-		//}
+		}
 	}
 
 }

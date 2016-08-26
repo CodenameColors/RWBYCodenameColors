@@ -326,15 +326,15 @@ void ARubyRose::OnFire() {
 	*@PARAM ObjectQueryParams the parameters the hit trace must follow
 	* Takes the beginnig location, and the end of location and draws a line between them,
 	* Makes the line be drawn on the normal, and not a define vector GREAT for attaking animations
-	**/
+	*/
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 
-	if (Perspective == ECameraType::Third) {
+	if (!SideView) {
 
 		bool CamHitSuccess = GetWorld()->LineTraceSingle(CameraHit, CameraLocation, CameraLocation + (ForwardVector * 1000000), CamCollisionParams, CamObjectQueryParams);
-		DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Blue, true, 1);
+		//DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Blue, true, 1);
 		if (CamHitSuccess) {
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
 			DrawDebugLine(GetWorld(), CameraLocation, CameraLocation + (ForwardVector * 100000), FColor::Green, true, 1);
 
 			UCapsuleComponent* SkeletalTest = Cast<UCapsuleComponent>(CameraHit.GetComponent());
@@ -366,7 +366,7 @@ void ARubyRose::OnFire() {
 
 		}
 	}
-	else if (Perspective == ECameraType::Side) {
+	else if (SideView) {
 
 		FVector StartLocation = GetMesh()->GetSocketLocation(FName("GunTip"));
 		FVector EndLocation = StartLocation + ThisPlayer->GetCharacter()->GetActorForwardVector() * 1000;
