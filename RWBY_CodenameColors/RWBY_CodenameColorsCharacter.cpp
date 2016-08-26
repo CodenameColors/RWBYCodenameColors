@@ -1753,6 +1753,7 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, SideView);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Perspective);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bWallJumping);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Dust);
 
 	
 
