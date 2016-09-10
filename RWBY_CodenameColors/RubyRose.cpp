@@ -15,6 +15,8 @@ ARubyRose::ARubyRose() {
 
 	CurrentAmmo = MaxAmmo / 5;
 
+	SemblanceMultiplier = 1.f;
+
 	//CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_TestingCharacter::OnOverlap);
 }
 
@@ -49,6 +51,8 @@ void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 
 	InputComponent->BindAction("Shoot", IE_Pressed, this, &ARubyRose::StartShooting);
 	//InputComponent->BindAction("Shoot", IE_Released, this, &ARubyRose::StopShooting);
+
+	InputComponent->BindAction("Semblance", IE_Pressed, this, &ARubyRose::UseSemblance);
 
 }
 
@@ -152,10 +156,11 @@ void ARubyRose::StartAttack_Implementation(){
 	if (bHanging || bSliding) {
 		return;
 	}
+	SlowDown(120);
 
-	bMeleeAttacking = true;
+	SetAttackingBool(&bMeleeAttacking, true);
 	PerformAttack(true);
-	GetCharacterMovement()->MaxWalkSpeed = 60.f;
+	
 }
 
 
@@ -168,7 +173,7 @@ void ARubyRose::StopAttack_Implementation(){
 	bMeleeAttacking = false;
 	PerformAttack(false);
 
-	FTimerDelegate AttackState;
+	//FTimerDelegate AttackState;
 	
 
 	//AttackState.BindUFunction(this, FName("SetAttackingBool"), false);
@@ -241,7 +246,6 @@ void ARubyRose::OnAttack(){
 	}
 }
 
-
 void ARubyRose::ServerPerformAttack_Implementation(bool ShouldAttack){
 	PerformAttack(ShouldAttack);
 }
@@ -250,9 +254,9 @@ bool ARubyRose::ServerPerformAttack_Validate(bool ShouldAttack){
 	return true;
 }
 
-void ARubyRose::SetAttackingBool(bool NewBoolState) {
+void ARubyRose::SetAttackingBool(bool *OldBool, bool NewBoolState) {
 
-	bMeleeAttacking = NewBoolState;
+	*OldBool = NewBoolState;
 
 }
 
@@ -380,6 +384,47 @@ void ARubyRose::OnFire() {
 	}
 }
 
+void ARubyRose::UseSemblance() {
+	Super::UseSemblance();
+}
+
+
+void ARubyRose::PerformSemblance() {
+
+	Super::PerformSemblance();
+
+	if (Semblance == 100) {
+		Semblance = 0;
+		ServerSetValue(2.f);
+	}
+
+}
+
+void ARubyRose::ServerPerformSemblance_Implementation() {
+
+	PerformSemblance();
+}
+
+bool ARubyRose::ServerPerformSemblance_Validate() {
+	return true;
+}
+
+void ARubyRose::ServerSetValue_Implementation(float NewFloatValue) {
+
+	SemblanceMultiplier = NewFloatValue;
+
+	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
+	if (ThisPlayer) {
+		ThisPlayer->GetCharacter()->GetCharacterMovement()->MaxWalkSpeed = (ThisPlayer->GetCharacter()->GetCharacterMovement()->MaxWalkSpeed * SemblanceMultiplier);
+	}
+
+}
+
+bool ARubyRose::ServerSetValue_Validate(float NewFloatValue){
+	return true;
+}
+
+
 void ARubyRose::OnRep_Task() {
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -419,13 +464,14 @@ void ARubyRose::OnRep_Task() {
 	}
 }
 
+
 void ARubyRose::OnRep_MeleeAttack() {
 	
 	if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
 		
 	}
 	else {
-		GetMesh()->GetAnimInstance()->Montage_Play(Melee, 1);
+		GetMesh()->GetAnimInstance()->Montage_Play(Melee, SemblanceMultiplier);
 	}
 
 	OnAttack();
@@ -437,6 +483,6 @@ void ARubyRose::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifeti
 	
 	DOREPLIFETIME(ARubyRose, bCanDealAttackDamage);
 	DOREPLIFETIME(ARubyRose, Melee);
-
+	DOREPLIFETIME(ARubyRose, SemblanceMultiplier);
 	
 }

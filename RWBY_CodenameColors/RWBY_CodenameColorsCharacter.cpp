@@ -10,6 +10,7 @@
 #include "DustPickup.h"
 #include "Runtime/Engine/Classes/Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Blueprint/UserWidget.h"
 
 ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 
@@ -65,7 +66,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 
 	ThirdPersonBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPeresonCameraBoom"));
 	ThirdPersonBoom->AttachTo(RootComponent);
-	ThirdPersonBoom->bAbsoluteRotation = true;; // Rotation of the character should not affect rotation of boom
+	ThirdPersonBoom->bAbsoluteRotation = true; // Rotation of the character should not affect rotation of boom
 	ThirdPersonBoom->bDoCollisionTest = false;
 	ThirdPersonBoom->TargetArmLength = 175;
 	ThirdPersonBoom->SocketOffset = FVector(20.f, 75.f, 60.f);
@@ -116,6 +117,22 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
 
+void ARWBY_CodenameColorsCharacter::BeginPlay(){
+
+	Super::BeginPlay();
+
+
+
+	if (PlayerHudClass != nullptr) {
+		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), PlayerHudClass);
+		if (CurrentWidget != nullptr) {
+			CurrentWidget->AddToViewport();
+		}
+	}
+
+
+}
+
 void ARWBY_CodenameColorsCharacter::OnOverlap(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult & SweepResult) {
 	
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Entered Wall"));
@@ -162,7 +179,8 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 	InputComponent->BindAction("Healing", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartHealing);
 	InputComponent->BindAction("Healing", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopHealing);
 
-
+	//fInputComponent->BindAction("Semblance", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::UseSemblance);
+	
 	InputComponent->BindAction("Use Dust", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::UseDust);
 
 	//Allows the the character to the turn based on mouse 
@@ -387,6 +405,7 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 
 			if ((Controller != NULL) && (Value != 0.0f))
 			{
+
 				//Sets the max walk speed higher when in third person
 				GetCharacterMovement()->MaxWalkSpeed = 450.f;
 
@@ -397,17 +416,31 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 
 			if ((Controller != NULL) && (Value != 0.0f))
 			{
-				//Sets the max walk speed higher when in third person
-				GetCharacterMovement()->MaxWalkSpeed = 600.f;
 
-				// find out which way is forward
-				const FRotator Rotation = Controller->GetControlRotation();
-				const FRotator YawRotation(0, Rotation.Yaw, 0);
+				if (bMeleeAttacking) {
+					GetCharacterMovement()->MaxWalkSpeed = 120;
 
-				// get forward vector
-				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-				AddMovementInput(Direction, Value);
-				
+					// find out which way is forward
+					const FRotator Rotation = Controller->GetControlRotation();
+					const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+					// get forward vector
+					const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+					AddMovementInput(Direction, Value);
+
+				}
+				else {
+					// find out which way is forward
+					const FRotator Rotation = Controller->GetControlRotation();
+					const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+					// get forward vector
+					const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+					AddMovementInput(Direction, Value);
+
+					//Sets the max walk speed higher when in third person
+					GetCharacterMovement()->MaxWalkSpeed = 600.f;
+				}
 			}
 			break;
 		}
@@ -432,20 +465,30 @@ void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 			//in respect to the Capsule
 		case(ECameraType::Third):
 
-			if (true) {
+			if (bMeleeAttacking) {
 
+				// find out which way is right
+				const FRotator Rotation = Controller->GetControlRotation();
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+				// get right vector 
+				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+				// add movement in that direction
+				AddMovementInput(Direction, Value);
 			}
-			//sets a new Movement speed
-			GetCharacterMovement()->MaxWalkSpeed = 600.f;
+			else {
+				//sets a new Movement speed
+				GetCharacterMovement()->MaxWalkSpeed = 600.f;
 
-			// find out which way is right
-			const FRotator Rotation = Controller->GetControlRotation();
-			const FRotator YawRotation(0, Rotation.Yaw, 0);
+				// find out which way is right
+				const FRotator Rotation = Controller->GetControlRotation();
+				const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-			// get right vector 
-			const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-			// add movement in that direction
-			AddMovementInput(Direction, Value);
+				// get right vector 
+				const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+				// add movement in that direction
+				AddMovementInput(Direction, Value);
+			}
 	}
 
 }
@@ -1170,11 +1213,11 @@ void ARWBY_CodenameColorsCharacter::OnElementalDamage(float DeltaSeconds) {
 			case(ECharacterState::Freezing) :
 				//AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 				if (Perspective == ECameraType::Side) {
-					GetCharacterMovement()->MaxWalkSpeed = (450 * (FrozenPercent / 100));
+					//GetCharacterMovement()->MaxWalkSpeed = (450 * (FrozenPercent / 100));
 					//GetCharacterMovement()->MaxWalkSpeed = 450 - (450 * (FrozenPercent / 100)) * DeltaSeconds;
 				}
 				else {
-					GetCharacterMovement()->MaxWalkSpeed = (600 * (FrozenPercent / 100)) ;
+					//GetCharacterMovement()->MaxWalkSpeed = (600 * (FrozenPercent / 100)) ;
 				}
 				break;
 
@@ -1212,6 +1255,10 @@ void ARWBY_CodenameColorsCharacter::OnElementalDamage(float DeltaSeconds) {
 		Destroy();
 	}
 
+}
+
+void ARWBY_CodenameColorsCharacter::SlowDown(float NewSpeed) {
+	GetCharacterMovement()->MaxWalkSpeed = NewSpeed;
 }
 
 void ARWBY_CodenameColorsCharacter::OnElementalDamage(ECharacterState::Type CurrentState, float DeltaSeconds, int FrozenPercent) {
@@ -1372,6 +1419,28 @@ void ARWBY_CodenameColorsCharacter::StartDodging() {
 void ARWBY_CodenameColorsCharacter::StopDodging() {
 
 	PerformDodge(false);
+}
+
+void ARWBY_CodenameColorsCharacter::UseSemblance() {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("BUTTON PRESSED"));
+	PerformSemblance();
+}
+
+
+void ARWBY_CodenameColorsCharacter::PerformSemblance() {
+
+	if (GetNetMode() == NM_Client) {
+		ServerPerformSemblance();
+	}
+}
+
+void ARWBY_CodenameColorsCharacter::ServerPerformSemblance_Implementation() {
+
+	PerformSemblance();
+}
+
+bool ARWBY_CodenameColorsCharacter::ServerPerformSemblance_Validate() {
+	return true;
 }
 
 void ARWBY_CodenameColorsCharacter::UseDust() {
@@ -1732,29 +1801,36 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Task);
+
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Health);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, isDodging);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, WhileDodging);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, PoweredUpState);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bMeleeAttacking);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, MaxAmmo);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, CurrentAmmo);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Shooting);
+
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bIsPoweredUp);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanPickupDust);
+
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanWallTrace);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bCanClimb);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bHanging);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bClimbing);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, ClimbPosition);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, CharacterStatusEffects);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, WhileDodging);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, PoweredUpState);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bMeleeAttacking);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bSliding);
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bWallJumping);
+
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, CharacterStatusEffects);
+	
+	
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, OutAngle);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, SideView);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Perspective);
-	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, bWallJumping);
+	
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Dust);
-
+	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Semblance);
 	
 
 

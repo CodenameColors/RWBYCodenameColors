@@ -20,4 +20,9 @@ void AMyPlayerController::Respawn() {
 	}
 }
 
+void AMyPlayerController::SetMaxSpeed() {
+	GetCharacter()->GetCharacterMovement()->MaxWalkSpeed = 120;
+
+}
+
 

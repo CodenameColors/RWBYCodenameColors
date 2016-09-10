@@ -21,7 +21,7 @@ public:
 
 	void Respawn();
 
-
+	void SetMaxSpeed();
 	
 	
 };

@@ -100,10 +100,18 @@ class ARWBY_CodenameColorsCharacter : public ACharacter
 
 protected:
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Stamina", meta = (BlueprintProtected = "true"))
+		TSubclassOf<class UUserWidget> PlayerHudClass;
+
+	UPROPERTY()
+	class UUserWidget* CurrentWidget;
+
 	void StartJump();
 	void StopJump();
 
 	void MoveCharacter( );
+
+	virtual void UseSemblance();
 
 	void UseDust();
 
@@ -170,6 +178,11 @@ protected:
 	void GetAimAngle();
 
 	void PerformCrouch();
+
+	virtual void PerformSemblance();
+
+	UFUNCTION(BlueprintCallable, Category = "RWBY Character", meta = (AllowPrivateAccess = "true"))
+		void SlowDown(float NewSpeed);
 
 	//returns true while in the middle of a dodge
 	UPROPERTY(BlueprintReadWrite, Replicated)
@@ -290,7 +303,7 @@ protected:
 	UPROPERTY(ReplicatedUsing = OnRep_WallJump, BlueprintReadWrite)
 		bool bWallJumping;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter")//, Replicated)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RWBYCharacter", Replicated)
 	float Semblance;
 
 	UPROPERTY(Replicated, BlueprintReadWrite)
@@ -301,6 +314,8 @@ protected:
 
 public:
 	ARWBY_CodenameColorsCharacter();
+
+	virtual void BeginPlay();
 
 	AActor* LastHitActor;
 
@@ -440,6 +455,11 @@ protected:
 		bool ServerPerformUseDust_Validate( );
 
 	UFUNCTION(Server, Reliable, WithValidation)
+		virtual void ServerPerformSemblance();
+		virtual void ServerPerformSemblance_Implementation();
+		virtual bool ServerPerformSemblance_Validate();
+
+	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerPerformHealing(bool Healing);
 		void ServerPerformHealing_Implementation(bool Healing);
 		bool ServerPerformHealing_validate(bool Healing);
@@ -503,5 +523,7 @@ protected:
 		void ServerPerformCrouch();
 		void ServerPerformCrouch_Implementation();
 		bool ServerPerformCrouch_Validate();
+
+
 
 };

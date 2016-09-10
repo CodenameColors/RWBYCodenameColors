@@ -22,6 +22,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
 		UAnimMontage* Melee;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
+		float SemblanceMultiplier;
+
 protected:
 
 	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const override;
@@ -42,6 +45,9 @@ protected:
 		bool bCanDamageSameActor;
 
 private:
+
+	void UseSemblance() override;
+	void PerformSemblance() override;
 
 	void OnDodge() override;
 
@@ -68,7 +74,7 @@ private:
 
 	FTimerHandle PetalSpawnDelay;
 
-	void SetAttackingBool(bool NewBoolState);
+	void SetAttackingBool(bool *OldBool, bool NewBoolState);
 
 	FTimerHandle Attack;
 
@@ -110,5 +116,15 @@ public:
 		void ServerPerformTask_(ETask::Type NewTask);
 		void ServerPerformTask__Implementation(ETask::Type NewTask);
 		bool ServerPerformTask__Validate(ETask::Type NewTask);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformSemblance();
+		void ServerPerformSemblance_Implementation();
+		bool ServerPerformSemblance_Validate();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerSetValue(float NewFloatValue);
+		void ServerSetValue_Implementation(float NewFloatValue);
+		bool ServerSetValue_Validate(float NewFloatValue);
 
 };
