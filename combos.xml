@@ -1,0 +1,148 @@
+<!--
+
+LD = light dash attack
+HD = heavy dash attack
+H = heavy attack
+L = light 
+ 
+Combos:
+
+1.)    L-L-L-L-L-L-L
+
+2.)    H-H-H-H-H-H
+
+3.)    L-H-L-L-H-H
+
+4.)    L-L-L-H-L-HD
+
+5.)    LD-H-L-L-H-H
+
+6.)    HD-L-L-L-H-H-LD
+
+7.)    H-H-L-L-LD
+
+8.)    LD-H-H-L-L-L-LD
+
+-->
+
+
+<MeleeAttacking>
+    
+    <Light>
+        
+        <Heavy> 
+            <Light>
+            
+            </Light>
+        </Heavy>
+        <Light>
+            
+            <Heavy>
+                <Heavy>
+                    <!-- part of combo 3 -->
+                    
+                    <end/>
+                </Heavy>
+            </Heavy>
+            
+            <Light>
+                
+                <Heavy>
+                    <!-- part of combo 4 -->
+                    <Light>
+                        <Heavy-Dash>
+
+                            <end/>
+                        </Heavy-Dash>
+                    </Light>
+                </Heavy>
+                
+                <light>
+                    <light>
+                        <Light>
+                            
+                            <end/> <!-- part of combo 1-->
+                        </Light>
+                    </light>
+                </light>
+            </Light>
+        </Light>
+    </Light>
+    
+    
+    <Heavy>
+        <Heavy>
+            
+            <Light>
+                <Light>
+                    <Light-dash>
+                        
+                        <!-- End of combo 7 -->
+                        <end/>
+                    </Light-dash>
+                </Light>
+            </Light>
+            
+            <Heavy>
+                <Heavy>
+                    <Heavy>
+                        <Heavy>
+                            
+                            
+                            <end/> <!-- part of combo 2 -->
+                        </Heavy>
+                    </Heavy>
+                </Heavy>
+            </Heavy>
+        </Heavy>
+    </Heavy>
+    
+    <Light-Dash>
+        <Heavy>
+            <Heavy>
+                <Heavy>
+                    <Light>
+                        <Light>
+                            <Light>
+                                <Light-Dash>
+                                    </end> <!-- End of combo 8 -->
+                                </Light-Dash>
+                            </Light>
+                        </Light>
+                        
+                    </Light>
+                </Heavy>
+            </Heavy>
+                   
+            <Light>
+                <Light>
+                    <Heavy>
+                        <Heavy>
+                            
+                            <end/> <!-- End of combo 5 -->
+                        </Heavy>
+                    </Heavy>
+                </Light>
+            </Light>
+        </Heavy>
+    </Light-Dash>
+
+    
+    <Heavy-Dash>
+        <Light>
+            <Light>
+                <Light>
+                    <Heavy>
+                        <Heavy>
+                            <Light-Dash>
+                                
+                                <end/> <!-- End of combo 6 -->
+                            </Light-Dash>
+                        </Heavy>
+                    </Heavy>
+                </Light>
+            </Light>
+        </Light>
+    </Heavy-Dash>
+
+</MeleeAttacking>
