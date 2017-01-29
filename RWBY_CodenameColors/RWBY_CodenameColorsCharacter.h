@@ -18,7 +18,7 @@ UENUM()
 			None, 
 			Shooting,
 			Reload,
-			Block,
+			Block
 	};
 }
 

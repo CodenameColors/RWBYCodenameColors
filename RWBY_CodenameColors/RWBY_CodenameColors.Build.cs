@@ -6,7 +6,7 @@ public class RWBY_CodenameColors : ModuleRules
 {
 	public RWBY_CodenameColors(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" , "UMG"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" , "UMG", "XmlParser" });
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
     }
 }

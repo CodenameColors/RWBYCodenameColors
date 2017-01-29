@@ -6,37 +6,41 @@
 #include "CharacterPowers/RosePetal.h"
 #include "MyPlayerController.h"
 #include "DrawDebugHelpers.h"
+#include "Runtime/XmlParser/Public/XmlParser.h"
+
+
 
 //Sets the default values of this class
 ARubyRose::ARubyRose() {
 
 	//Super::ARWBY_CodenameColorsCharacter();
 	Super::SetMaxAmmo(25);
-
 	CurrentAmmo = MaxAmmo / 5;
-
 	SemblanceMultiplier = 1.f;
-
+	NextMontageSection = "None";
 	//CapsuleComponent->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_TestingCharacter::OnOverlap);
+
+	
+	
 }
 
+void ARubyRose::BeginPlay() {
+
+	Super::BeginPlay();
+
+
+	CreateTree();
+}
 
 void ARubyRose::Tick(float DeltaSeconds) {
 
 	Super::Tick(DeltaSeconds);
-
 	if (WhileDodging && !EPoweredUpState::None ) {
-		
-		FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("Petals Socket Spawn"));
-
-		//Spawn(SpawnLocation);
-	}
+		FVector SpawnLocation = GetMesh()->GetSocketLocation(FName("Petals Socket Spawn"));	}
 
 	if (bCanDealAttackDamage) {
 		OnAttack();
 	}
-	//OnAttack();
-
 }
 
 void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent){
@@ -46,16 +50,47 @@ void ARubyRose::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 	InputComponent->BindAction("Dodge", IE_Pressed, this, &ARubyRose::StartDodging);
 	//InputComponent->BindAction("Dodge", IE_Released, this, &ARubyRose::StopDodging);
 
-	InputComponent->BindAction("MeleeAttack", IE_Pressed, this, &ARubyRose::StartAttack);
-	InputComponent->BindAction("MeleeAttack", IE_Released, this, &ARubyRose::StopAttack);
+	InputComponent->BindAction("LightAttack", IE_Pressed, this, &ARubyRose::LightAttack);
+	//InputComponent->BindAction("MeleeAttack", IE_Released, this, &ARubyRose::StopAttack);
 
-	InputComponent->BindAction("Shoot", IE_Pressed, this, &ARubyRose::StartShooting);
+
+	InputComponent->BindAction("HeavyAttack", IE_Pressed, this, &ARubyRose::HeavyAttack);
 	//InputComponent->BindAction("Shoot", IE_Released, this, &ARubyRose::StopShooting);
 
 	InputComponent->BindAction("Semblance", IE_Pressed, this, &ARubyRose::UseSemblance);
 
 }
 
+
+void ARubyRose::CreateTree() {
+	 
+
+	//ComboTree* RootNode = new ComboTree("Last Light");
+	//RootNode->Light = new ComboTree("5th Light");
+
+	
+	RubyRoseComboNode* RootNode = new RubyRoseComboNode("Root", EAttackTypes::None);
+	RubyRoseComboNode* TempRoot = RootNode;
+	FString  CurrentDir = FPaths::GameDir() + "Source/RWBY_CodenameColors/Combos.xml";
+
+	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*CurrentDir)) {
+		return;
+	}
+
+	FXmlFile* myCombo = new FXmlFile(CurrentDir, EConstructMethod::ConstructFromFile);
+	const FXmlNode* Current = myCombo->GetRootNode();
+
+	RootNode->CreateTreeRecursively(RootNode, Current, 0);
+
+	BaseTree = RootNode;
+	CurrentSubTree = BaseTree;
+
+	FString test = RootNode->Light->Data.Animation;
+
+	TArray<FXmlNode*> ChildrenNodes = myCombo->GetRootNode()->GetChildrenNodes();
+	TArray<FXmlNode*> ChildrenNodes1 = ChildrenNodes[0]->GetChildrenNodes();
+	
+}
 
 // Function Used to the spawn the pickups
 void ARubyRose::Spawn(FVector SpawnLocation){
@@ -136,6 +171,17 @@ void ARubyRose::StartDodging(){
 }
 
 void ARubyRose::StopDodging(){
+
+	//After the player pressdodge they have .55 seconds to press attack to either preform a lightDash, or HeavyDash Attack
+	if (CurrentAttack == EAttacks::Light) {
+		CurrentAttack = EAttacks::Light_Dash;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Light DASH"));
+	}
+	else if(CurrentAttack == EAttacks::Heavy) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heavy Dash"));
+	}
+
+	//Return the player state to idle.
 	PerformDodge(false);
 }
 
@@ -151,26 +197,75 @@ void ARubyRose::OnDodge(){
 
 }
 
-void ARubyRose::StartAttack_Implementation(){
+void ARubyRose::LightAttack_Implementation(){
 
 	if (bHanging || bSliding) {
 		return;
 	}
+
+	CurrentAttack = EAttacks::Light;
+	
+	if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
+
+	}
+	else {
+		GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
+		CurrentMontagePlaying = LightMontage;
+		CurrentSubTree = CurrentSubTree->Light;
+	}
+
+	/*if (!LightMontage == NULL) {
+		GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
+		CurrentMontagePlaying == LightMontage;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("LightAttack"));
+	}
+
+	*/
+
 	SlowDown(120);
 
-	SetAttackingBool(&bMeleeAttacking, true);
-	PerformAttack(true);
+	//SetAttackingBool(&bMeleeAttacking, true);
+	//PerformAttack(true);
 	
 }
 
 
-bool ARubyRose::StartAttack_Validate() {
+bool ARubyRose::LightAttack_Validate() {
+	return true;
+}
+
+
+void ARubyRose::HeavyAttack_Implementation() {
+
+	if (bHanging || bSliding) {
+		return;
+	}
+
+	CurrentAttack = EAttacks::Heavy;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heavy Attack"));
+
+	if (!HeavyMontage == NULL) {
+
+		GetMesh()->GetAnimInstance()->Montage_Play(HeavyMontage, SemblanceMultiplier);
+		CurrentMontagePlaying = HeavyMontage;
+		CurrentSubTree = CurrentSubTree->Heavy;
+	}
+
+	SlowDown(120);
+
+	//SetAttackingBool(&bMeleeAttacking, true);
+	//PerformAttack(true);
+
+}
+
+
+bool ARubyRose::HeavyAttack_Validate() {
 	return true;
 }
 
 void ARubyRose::StopAttack_Implementation(){
 
-	bMeleeAttacking = false;
+	//bMeleeAttacking = false;
 	PerformAttack(false);
 
 	//FTimerDelegate AttackState;
@@ -192,9 +287,9 @@ void ARubyRose::PerformAttack(bool ShouldAttack){
 		return;
 	}
 
-	bMeleeAttacking = ShouldAttack;
+	//bMeleeAttacking = ShouldAttack;
 
-	OnRep_MeleeAttack();
+	//OnRep_MeleeAttack();
 
 }
 

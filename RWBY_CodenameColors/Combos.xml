@@ -1,37 +1,40 @@
 <MeleeAttacking name="StartMeleeAttacking">
     
     <Light name="ComboOneStart">
-        
+        <MontageName>LightAttackTree</MontageName>
+        <Animation>Light 1</Animation>
         <Heavy name="ComboThreeStart"> 
+            <Animation>Light 1 - H</Animation>
             <Light>
-            
+            <Animation>Light 1 - H - L</Animation>
             </Light>
         </Heavy>
         <Light>
-            
+            <Animation>Light 2</Animation>
             <Heavy>
+                <Animation>Light 2 - H</Animation>
                 <Heavy name="ComboThreeEnd">
-                    <!-- End of combo 3 -->
-                    
+                    <Animation>Light 1 - H - H</Animation>
+                   <!-- End of combo 3 -->
                     <end/>
                 </Heavy>
             </Heavy>
-            
-            <Light name="ComboFourStart">    
+            <Light name="ComboFourStart">
+                <Animation>Light 3</Animation>
                 <Heavy>
+                    <Animation>Light 4 - H</Animation>
                     <!-- part of combo 4 -->
-                    <Light>
                         <Heavy-Dash name="ComboFourEnd">
-
+                            <Animation>Light 4 - H - HD</Animation>
                             <end/>
                         </Heavy-Dash>
-                    </Light>
                 </Heavy>
-                
                 <light>
+                    <Animation>Light 4</Animation>
                     <light>
+                        <Animation>Light 5</Animation>
                         <Light name="ComboOneEnd">
-                            
+                            <Animation>Light 6</Animation>
                             <end/> <!-- part of combo 1-->
                         </Light>
                     </light>
@@ -42,12 +45,16 @@
     
     
     <Heavy name="ComboTwoStart">
+        <MontageName>HeavyAttackTree</MontageName>
+        <Animation>Heavy 1</Animation>
         <Heavy name="ComboSevenStart">
-            
+            <Animation>Heavy 2</Animation>
             <Light>
+                <Animation>Heavy 2 - L</Animation>
                 <Heavy>
+                    <Animation>Heavy 2 - L - H</Animation>
                     <Heavy-dash name="ComboSevenEnd">
-                        
+                        <Animation>Heavy 2 - L - H - HD</Animation>
                         <!-- End of combo 7 -->
                         <end/>
                     </Heavy-dash>
@@ -55,10 +62,13 @@
             </Light>
             
             <Heavy>
+                <Animation>Heavy 3</Animation>
                 <Heavy>
+                    <Animation>Heavy 4</Animation>
                     <Heavy>
+                        <Animation>Heavy 5</Animation>
                         <Heavy name="ComboTwoEnd">
-                            
+                            <Animation>Heavy 6</Animation>
                             
                             <end/> <!-- part of combo 2 -->
                         </Heavy>
@@ -73,13 +83,13 @@
             <Heavy>
                 <Heavy>
                     <Heavy>
-                        </end> <!-- End of combo 8 -->
+                        <end/> <!-- End of combo 8 -->
                     </Heavy>
                     
                     <Light>
                         <Light-Dash name="ComboEightEnd">
                                         
-                            </end> <!-- End of combo 9 -->
+                            <end/> <!-- End of combo 9 -->
                         </Light-Dash>
                     </Light>
                 </Heavy>

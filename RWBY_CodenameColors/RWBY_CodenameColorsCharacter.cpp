@@ -211,7 +211,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 	if (ThisPlayer) {
 
 		if (SideView && !bCanWallTrace) {
-			//ClientGetMousePos();
+			ClientGetMousePos();
 		}
 
 		//Checks if there has been a wall detected, and if so then runs the method
@@ -1400,12 +1400,16 @@ void ARWBY_CodenameColorsCharacter::OnDodge() {
 
 	
 	if (ThisPlayer) {
-		DisableInput(ThisPlayer);
+		//DisableInput(ThisPlayer);
 		if (!(ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling())) {
-			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
+			//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
+			
+
+			//When the player dodges teleport them forward.
+			ThisPlayer->GetCharacter()->SetActorLocation(ThisPlayer->GetCharacter()->GetActorLocation() + ThisPlayer->GetCharacter()->GetActorForwardVector() * 250, false, false, ETeleportType::TeleportPhysics);
 		}
 		else {
-			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 50000, false);
+			//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 50000, false);
 		}
 	
 	}

@@ -3,11 +3,26 @@
 #pragma once
 
 #include "RWBY_CodenameColorsCharacter.h"
+#include "CharacterCombos/RubyRoseComboNode.h"
 #include "RubyRose.generated.h"
 
 /**
  * 
  */
+
+
+UENUM()
+namespace EAttacks {
+	enum Type {
+		None,
+		Light,
+		Heavy,
+		Light_Dash,
+		Heavy_Dash
+	};
+}
+
+
 UCLASS()
 class RWBY_CODENAMECOLORS_API ARubyRose : public ARWBY_CodenameColorsCharacter
 {
@@ -22,8 +37,21 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
 		UAnimMontage* Melee;
 
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* LightMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* HeavyMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
 		float SemblanceMultiplier;
+
+
+	//Variables for combo and montage playing
+	EAttacks::Type CurrentAttack;
+	FString NextMontageSection;
+	UAnimMontage* CurrentMontagePlaying;
+
 
 protected:
 
@@ -45,6 +73,9 @@ protected:
 		bool bCanDamageSameActor;
 
 private:
+
+	virtual void BeginPlay();
+
 
 	void UseSemblance() override;
 	void PerformSemblance() override;
@@ -78,6 +109,11 @@ private:
 
 	FTimerHandle Attack;
 
+	void CreateTree();
+
+	RubyRoseComboNode* BaseTree;
+	RubyRoseComboNode* CurrentSubTree;
+
 	//void setStupid(class ARWBY_CodenameColorsCharacter* EPoweredUpState::Type);
 
 //***** ON REP FUNCTIONS*****\\
@@ -103,9 +139,14 @@ public:
 		bool ServerPerformDodge_Validate(bool bDodging);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void StartAttack();
-		void StartAttack_Implementation();
-		bool StartAttack_Validate();
+		void LightAttack();
+		void LightAttack_Implementation();
+		bool LightAttack_Validate();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void HeavyAttack();
+		void HeavyAttack_Implementation();
+		bool HeavyAttack_Validate();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void StopAttack();
