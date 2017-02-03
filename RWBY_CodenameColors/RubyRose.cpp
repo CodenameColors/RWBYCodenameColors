@@ -246,14 +246,14 @@ void ARubyRose::OnDodge(){
 
 }
 
-void ARubyRose::LightAttack_Implementation(){
+void ARubyRose::LightAttack_Implementation() {
 
 	if (bHanging || bSliding) {
 		return;
 	}
 
 	CurrentAttack = EAttacks::Light;
-	
+
 	if (LightMontage != NULL) {
 		if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
 			if (CurrentSubTree->Light == nullptr) {
@@ -276,18 +276,17 @@ void ARubyRose::LightAttack_Implementation(){
 		}
 	}
 	/*if (!LightMontage == NULL) {
-		GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
-		CurrentMontagePlaying == LightMontage;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("LightAttack"));
+	GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
+	CurrentMontagePlaying == LightMontage;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("LightAttack"));
 	}
-
 	*/
 
 	SlowDown(120);
 
 	//SetAttackingBool(&bMeleeAttacking, true);
 	//PerformAttack(true);
-	
+
 }
 
 
