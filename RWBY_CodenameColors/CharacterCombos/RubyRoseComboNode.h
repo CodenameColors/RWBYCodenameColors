@@ -63,7 +63,9 @@ public:
 
 	void CreateTreeRecursively(RubyRoseComboNode* CurrerntRoot, const FXmlNode* CurrentRootNode, int CurrentMainTreeBranch);
 
-	FString GetInnnerXML(FString DesiredTag, const FXmlNode* CurrentRootNode);
+	FString GetInnnerXML(FString DesiredTag, const FXmlNode* CurrentRootNode, FString BaseToContain);
+
+	FString GetAssetName(FString DesiredAssetType, FString AllInnerContent);
 
 
 };

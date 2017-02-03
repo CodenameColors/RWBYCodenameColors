@@ -1,40 +1,88 @@
 <MeleeAttacking name="StartMeleeAttacking">
     
     <Light name="ComboOneStart">
-        <MontageName>LightAttackTree</MontageName>
-        <Animation>Light 1</Animation>
-        <Heavy name="ComboThreeStart"> 
-            <Animation>Light 1 - H</Animation>
+      Animation=Light 1,
+      Particle= ,
+      SoundFX= ,
+      Mesh= ,
+      Dialogue= ,
+      <MontageName>LightAttackTree</MontageName>
+        <Heavy name="ComboThreeStart">
+          Animation=Light 1 - H,
+          Particle= ,
+          SoundFX= ,
+          Mesh= ,
+          Dialogue= ,
             <Light>
-            <Animation>Light 1 - H - L</Animation>
+              Animation=Light 1 - H - L,
+              Particle= ,
+              SoundFX= ,
+              Mesh= ,
+              Dialogue= ,
             </Light>
         </Heavy>
         <Light>
-            <Animation>Light 2</Animation>
-            <Heavy>
-                <Animation>Light 2 - H</Animation>
-                <Heavy name="ComboThreeEnd">
-                    <Animation>Light 1 - H - H</Animation>
-                   <!-- End of combo 3 -->
+            Animation=Light 2,
+            Particle= ,
+            SoundFX= ,
+            Mesh= ,
+            Dialogue= ,
+          <Heavy>
+                Animation=Light 2 - H,
+                Particle= ,
+                SoundFX= ,
+                Mesh= ,
+                Dialogue= ,
+            <Heavy name="ComboThreeEnd">    
+                  Animation=Light 2 - H- H,
+                  Particle= ,
+                  SoundFX= ,
+                  Mesh= ,
+                  Dialogue= ,
+              <!-- End of combo 3 -->
                     <end/>
                 </Heavy>
             </Heavy>
             <Light name="ComboFourStart">
-                <Animation>Light 3</Animation>
+              Animation=Light 3,
+              Particle= ,
+              SoundFX= ,
+              Mesh= ,
+              Dialogue= ,
                 <Heavy>
-                    <Animation>Light 4 - H</Animation>
+                  Animation=Light 3 - H,
+                  Particle= ,
+                  SoundFX= ,
+                  Mesh= ,
+                  Dialogue= ,
                     <!-- part of combo 4 -->
                         <Heavy-Dash name="ComboFourEnd">
-                            <Animation>Light 4 - H - HD</Animation>
+                          Animation=Light 3 - H - HD,
+                          Particle= ,
+                          SoundFX= ,
+                          Mesh= ,
+                          Dialogue= ,
                             <end/>
                         </Heavy-Dash>
                 </Heavy>
                 <light>
-                    <Animation>Light 4</Animation>
+                  Animation=Light 4,
+                  Particle= ,
+                  SoundFX= ,
+                  Mesh= ,
+                  Dialogue= ,
                     <light>
-                        <Animation>Light 5</Animation>
-                        <Light name="ComboOneEnd">
-                            <Animation>Light 6</Animation>
+                        Animation=Light 5,
+                        Particle= ,
+                        SoundFX= ,
+                        Mesh= ,
+                        Dialogue= ,
+                      <Light name="ComboOneEnd">
+                        Animation=Light 6,
+                        Particle= ,
+                        SoundFX= ,
+                        Mesh= ,
+                        Dialogue= ,
                             <end/> <!-- part of combo 1-->
                         </Light>
                     </light>
@@ -45,16 +93,37 @@
     
     
     <Heavy name="ComboTwoStart">
-        <MontageName>HeavyAttackTree</MontageName>
-        <Animation>Heavy 1</Animation>
+      Animation=Heavy 1,
+      Particle= ,
+      SoundFX= ,
+      Mesh= ,
+      Dialogue= ,
+      <MontageName>HeavyAttackTree</MontageName>
         <Heavy name="ComboSevenStart">
-            <Animation>Heavy 2</Animation>
+          Animation=Heavy 2,
+          Particle= ,
+          SoundFX= ,
+          Mesh= ,
+          Dialogue= ,
             <Light>
-                <Animation>Heavy 2 - L</Animation>
+              Animation=Heavy 2 - L,
+              Particle= ,
+              SoundFX= ,
+              Mesh= ,
+              Dialogue= ,
                 <Heavy>
-                    <Animation>Heavy 2 - L - H</Animation>
+                  Animation=Heavy 2 - L - H,
+                  Particle= ,
+                  SoundFX= ,
+                  Mesh= ,
+                  Dialogue= ,
                     <Heavy-dash name="ComboSevenEnd">
-                        <Animation>Heavy 2 - L - H - HD</Animation>
+                      Animation=Heavy 2 - L - H - HD,
+                      Particle= ,
+                      SoundFX= ,
+                      Mesh= ,
+                      Dialogue= ,
+                      <Animation>Heavy 2 - L - H - HD</Animation>
                         <!-- End of combo 7 -->
                         <end/>
                     </Heavy-dash>
@@ -62,14 +131,29 @@
             </Light>
             
             <Heavy>
-                <Animation>Heavy 3</Animation>
+                  Animation=Heavy 3,
+                  Particle= ,
+                  SoundFX= ,
+                  Mesh= ,
+                  Dialogue= ,
+              <Heavy>
+                  Animation=Heavy 4,
+                  Particle= ,
+                  SoundFX= ,
+                  Mesh= ,
+                  Dialogue= ,
                 <Heavy>
-                    <Animation>Heavy 4</Animation>
-                    <Heavy>
-                        <Animation>Heavy 5</Animation>
-                        <Heavy name="ComboTwoEnd">
-                            <Animation>Heavy 6</Animation>
-                            
+                    Animation=Heavy 5,
+                    Particle= ,
+                    SoundFX= ,
+                    Mesh= ,
+                    Dialogue= ,
+                  <Heavy name="ComboTwoEnd">
+                      Animation=Heavy 6,
+                      Particle= ,
+                      SoundFX= ,
+                      Mesh= ,
+                      Dialogue= ,
                             <end/> <!-- part of combo 2 -->
                         </Heavy>
                     </Heavy>
