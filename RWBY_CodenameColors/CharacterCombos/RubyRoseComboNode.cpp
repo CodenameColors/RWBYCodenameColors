@@ -35,9 +35,8 @@ void RubyRoseComboNode::CreateTreeRecursively(RubyRoseComboNode* CurrerntRoot, c
 		//This will create the nodes for the tree for Light Attacks
 		if (!CurrentRootNode->FindChildNode("Light") == NULL) {
 			if (CurrentRootNode->FindChildNode("Light")->GetTag() == "Light") {
-				//CurrentRootNode = CurrentRootNode->FindChildNode("Light");
 				//RIGHT HERE!! YEA YOU!! make a search/get method to get the internal value of the animation node.
-				CurrerntRoot->Light = new RubyRoseComboNode(GetAssetName("Animation", CurrentRootNode->FindChildNode("Light")->GetContent()) , EAttackTypes::Light);
+				CurrerntRoot->Light = new RubyRoseComboNode(GetInnnerXML("Animation",CurrentRootNode->FindChildNode("Light")), EAttackTypes::Light);
 				counter++;
 				if (CurrentRootNode->GetChildrenNodes().Num() > 1) {
 					MultipleChildrenPositionInBranch.Add(counter);
@@ -50,7 +49,7 @@ void RubyRoseComboNode::CreateTreeRecursively(RubyRoseComboNode* CurrerntRoot, c
 		//This will create the nodes for the tree for Light Attacks
 		if (!CurrentRootNode->FindChildNode("Heavy") == NULL) {
 			if (CurrentRootNode->FindChildNode("Heavy")->GetTag() == "Heavy") {
-				CurrerntRoot->Heavy = new RubyRoseComboNode(GetAssetName("Animation", CurrentRootNode->FindChildNode("Heavy")->GetContent()), EAttackTypes::Heavy);
+				CurrerntRoot->Heavy = new RubyRoseComboNode(GetInnnerXML("Animation", CurrentRootNode->FindChildNode("Heavy")), EAttackTypes::Heavy);
 				counter++;
 				if (CurrentRootNode->GetChildrenNodes().Num() > 1) {
 					MultipleChildrenPositionInBranch.Add(counter);
@@ -64,7 +63,7 @@ void RubyRoseComboNode::CreateTreeRecursively(RubyRoseComboNode* CurrerntRoot, c
 		//This will create the nodes for the tree for Light Attacks
 		if (!CurrentRootNode->FindChildNode("Light-Dash") == NULL) {
 			if (CurrentRootNode->FindChildNode("Light-Dash")->GetTag() == "Light-Dash") {
-				CurrerntRoot->LightDash = new RubyRoseComboNode(GetAssetName("Animation", CurrentRootNode->FindChildNode("Light-Dash")->GetContent()), EAttackTypes::Light_Dash);
+				CurrerntRoot->LightDash = new RubyRoseComboNode(GetInnnerXML("Animation", CurrentRootNode->FindChildNode("Light-Dash")), EAttackTypes::Light_Dash);
 				counter++;
 				if (CurrentRootNode->GetChildrenNodes().Num() > 1) {
 					MultipleChildrenPositionInBranch.Add(counter);
@@ -78,7 +77,7 @@ void RubyRoseComboNode::CreateTreeRecursively(RubyRoseComboNode* CurrerntRoot, c
 		//This will create the nodes for the tree for Light Attacks
 		if (!CurrentRootNode->FindChildNode("Heavy-Dash") == NULL) {
 			if (CurrentRootNode->FindChildNode("Heavy-Dash")->GetTag() == "Heavy-Dash") {
-				CurrerntRoot->HeavyDash = new RubyRoseComboNode(GetAssetName("Animation", CurrentRootNode->FindChildNode("Heavy-Dash")->GetContent()), EAttackTypes::Heavy_Dash);
+				CurrerntRoot->HeavyDash = new RubyRoseComboNode(GetInnnerXML("Animation", CurrentRootNode->FindChildNode("Heavy-Dash")), EAttackTypes::Heavy_Dash);
 				counter++;
 				if (CurrentRootNode->GetChildrenNodes().Num() > 1) {
 					MultipleChildrenPositionInBranch.Add(counter);
@@ -97,37 +96,18 @@ void RubyRoseComboNode::CreateTreeRecursively(RubyRoseComboNode* CurrerntRoot, c
 }
 
 //Currently broken....
-FString RubyRoseComboNode::GetInnnerXML(FString DesiredTag, const FXmlNode* CurrentRootNode, FString BaseToContain) {
+FString RubyRoseComboNode::GetInnnerXML(FString DesiredTag, const FXmlNode* CurrentRootNode) {
 
-	return CurrentRootNode->FindChildNode(DesiredTag)->GetContent();
-}
-
-FString RubyRoseComboNode::GetAssetName(FString DesiredAssetType, FString AllInnerContent) {
-	
-	FString ReturnString = "";
-
-	TArray<FString> Types;
-	AllInnerContent.ParseIntoArray(Types,TEXT(","), true);
-	
-	for (int i = 0; i < Types.Num(); i++) {
-		Types[i].RemoveAt(0, Types[i].Find("=", ESearchCase::CaseSensitive, ESearchDir::FromStart, 0) +  1, true);
-		if (DesiredAssetType == "Animation") {
-			ReturnString = Types[0];
-		}
-		else if (DesiredAssetType == "Particle") {
-			ReturnString = Types[1];
-		}
-		else if (DesiredAssetType == "SoundFX") {
-			ReturnString = Types[2];
-		}
-		else if (DesiredAssetType == "Mesh") {
-			ReturnString = Types[3];
-		}
-		else if (DesiredAssetType == "Dialogue") {
-			ReturnString = Types[4];
+	for (int i = 0; i < CurrentRootNode->GetChildrenNodes().Num(); i++) {
+		for (int j = 0; j < CurrentRootNode->GetChildrenNodes()[i]->GetChildrenNodes().Num(); j++) {
+			if (CurrentRootNode->GetChildrenNodes()[i]->GetChildrenNodes()[j]->GetTag() == DesiredTag) {
+				
+				FString Test = CurrentRootNode->GetChildrenNodes()[i]->GetChildrenNodes()[j]->GetContent();
+				return Test;
+			}
 		}
 	}
-	return ReturnString;
+	return "";
 }
 
 void RubyRoseComboNode::FilleComboTree(RubyRoseComboNode* Root, TArray<FString> Animation, TArray<EAttackTypes> Type) {

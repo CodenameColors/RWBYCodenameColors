@@ -15,13 +15,13 @@ void UNextMontageSectionJump::Notify(USkeletalMeshComponent * MeshComp, UAnimSeq
 		ARubyRose* Ruby = Cast<ARubyRose>(TestChar);
 		if (Ruby) {
 			
-			if (Ruby->NextMontageSection.IsEmpty()) {
-				MeshComp->GetAnimInstance()->Montage_SetNextSection(MeshComp->GetAnimInstance()->Montage_GetCurrentSection(), "End");
+			if (Ruby->NextMontageSection == "None") {
+				MeshComp->GetAnimInstance()->Montage_JumpToSection(FName("End"), Ruby->CurrentMontagePlaying);
 				TestChar->GetCharacterMovement()->MaxWalkSpeed = 600;
 				Ruby->LastHitActor = nullptr;
 			}
 			else {
-				MeshComp->GetAnimInstance()->Montage_SetNextSection(MeshComp->GetAnimInstance()->Montage_GetCurrentSection(), *Ruby->NextMontageSection);
+				MeshComp->GetAnimInstance()->Montage_JumpToSection(FName(*Ruby->NextMontageSection), Ruby->CurrentMontagePlaying);
 			}
 
 		}
