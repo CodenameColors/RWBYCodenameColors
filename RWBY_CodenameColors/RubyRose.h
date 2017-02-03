@@ -43,12 +43,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
 		UAnimMontage* HeavyMontage;
 
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* LightDashMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* HeavyDashMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
 		float SemblanceMultiplier;
 
@@ -57,7 +51,7 @@ public:
 	EAttacks::Type CurrentAttack;
 	FString NextMontageSection;
 	UAnimMontage* CurrentMontagePlaying;
-	bool HitInputed;
+
 
 protected:
 
@@ -77,8 +71,6 @@ protected:
 	//Boolean used to determine the dodging
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"), Category = "RWBYCharacter", Replicated)
 		bool bCanDamageSameActor;
-
-
 
 private:
 
@@ -121,8 +113,6 @@ private:
 
 	RubyRoseComboNode* BaseTree;
 	RubyRoseComboNode* CurrentSubTree;
-
-	
 
 	//void setStupid(class ARWBY_CodenameColorsCharacter* EPoweredUpState::Type);
 
