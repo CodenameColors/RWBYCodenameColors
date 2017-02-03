@@ -176,11 +176,60 @@ void ARubyRose::StopDodging(){
 	if (CurrentAttack == EAttacks::Light) {
 		CurrentAttack = EAttacks::Light_Dash;
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Light DASH"));
-	}
-	else if(CurrentAttack == EAttacks::Heavy) {
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heavy Dash"));
-	}
 
+
+		if (LightDashMontage != NULL) {
+			/*if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
+				if (CurrentSubTree->LightDash == nullptr) {
+					NextMontageSection.Empty();
+				}
+				else {
+					if (HitInputed) {
+						return;
+					}
+					NextMontageSection = CurrentSubTree->LightDash->Data.Animation;
+					CurrentSubTree = CurrentSubTree->LightDash;
+					HitInputed = true;
+				}
+			}
+			*/
+			//else {
+				CurrentSubTree = BaseTree;
+				GetMesh()->GetAnimInstance()->Montage_Play(LightDashMontage, SemblanceMultiplier);
+				CurrentMontagePlaying = LightDashMontage;
+				CurrentSubTree = CurrentSubTree->LightDash;
+			//}
+		}
+
+
+	}
+	else if (CurrentAttack == EAttacks::Heavy) {
+		CurrentAttack = EAttacks::Heavy_Dash;
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heavy Dash"));
+
+		if (HeavyDashMontage != NULL) {
+			if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
+				if (CurrentSubTree->HeavyDash == nullptr) {
+					NextMontageSection.Empty();
+				}
+				else {
+					if (HitInputed) {
+						return;
+					}
+					NextMontageSection = CurrentSubTree->HeavyDash->Data.Animation;
+					CurrentSubTree = CurrentSubTree->HeavyDash;
+					HitInputed = true;
+				}
+			}
+			else {
+				CurrentSubTree = BaseTree;
+				GetMesh()->GetAnimInstance()->Montage_Play(HeavyDashMontage, SemblanceMultiplier);
+				CurrentMontagePlaying = HeavyDashMontage;
+				CurrentSubTree = CurrentSubTree->HeavyDash;
+			}
+		}
+
+	}
 	//Return the player state to idle.
 	PerformDodge(false);
 }
@@ -205,15 +254,27 @@ void ARubyRose::LightAttack_Implementation(){
 
 	CurrentAttack = EAttacks::Light;
 	
-	if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
-
+	if (LightMontage != NULL) {
+		if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
+			if (CurrentSubTree->Light == nullptr) {
+				NextMontageSection.Empty();
+			}
+			else {
+				if (HitInputed) {
+					return;
+				}
+				NextMontageSection = CurrentSubTree->Light->Data.Animation;
+				CurrentSubTree = CurrentSubTree->Light;
+				HitInputed = true;
+			}
+		}
+		else {
+			CurrentSubTree = BaseTree;
+			GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
+			CurrentMontagePlaying = LightMontage;
+			CurrentSubTree = CurrentSubTree->Light;
+		}
 	}
-	else {
-		GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
-		CurrentMontagePlaying = LightMontage;
-		CurrentSubTree = CurrentSubTree->Light;
-	}
-
 	/*if (!LightMontage == NULL) {
 		GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
 		CurrentMontagePlaying == LightMontage;
@@ -244,13 +305,32 @@ void ARubyRose::HeavyAttack_Implementation() {
 	CurrentAttack = EAttacks::Heavy;
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heavy Attack"));
 
-	if (!HeavyMontage == NULL) {
 
-		GetMesh()->GetAnimInstance()->Montage_Play(HeavyMontage, SemblanceMultiplier);
-		CurrentMontagePlaying = HeavyMontage;
-		CurrentSubTree = CurrentSubTree->Heavy;
+	if (HitInputed) {
+		return;
 	}
+	else {
 
+		if (HeavyMontage != NULL) {
+			if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
+				if (CurrentSubTree->Heavy == nullptr) {
+					NextMontageSection.Empty();
+				}
+				else {
+
+					NextMontageSection = CurrentSubTree->Heavy->Data.Animation;
+					CurrentSubTree = CurrentSubTree->Heavy;
+					HitInputed = true;
+				}
+			}
+			else {
+				CurrentSubTree = BaseTree;
+				GetMesh()->GetAnimInstance()->Montage_Play(HeavyMontage, SemblanceMultiplier);
+				CurrentMontagePlaying = HeavyMontage;
+				CurrentSubTree = CurrentSubTree->Heavy;
+			}
+		}
+	}
 	SlowDown(120);
 
 	//SetAttackingBool(&bMeleeAttacking, true);

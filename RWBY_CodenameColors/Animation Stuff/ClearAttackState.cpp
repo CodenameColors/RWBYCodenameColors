@@ -12,7 +12,9 @@ void UClearAttackState::Notify(USkeletalMeshComponent * MeshComp, UAnimSequenceB
 	if (TestChar) {
 		ARubyRose* TestRuby = Cast<ARubyRose>(TestChar);
 		if (TestRuby) {
-			TestRuby->CurrentAttack = EAttacks::None;
+			//TestRuby->CurrentAttack = EAttacks::None;
+			TestRuby->HitInputed = false;
+			TestRuby->NextMontageSection = "";
 		}
 	}
 }
