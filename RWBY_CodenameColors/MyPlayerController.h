@@ -17,6 +17,8 @@ class RWBY_CODENAMECOLORS_API AMyPlayerController : public APlayerController
 
 public:
 
+	ARWBY_CodenameColorsCharacter* CurrentPlayerClass;
+
 	void OnKilled();
 
 	void Respawn();

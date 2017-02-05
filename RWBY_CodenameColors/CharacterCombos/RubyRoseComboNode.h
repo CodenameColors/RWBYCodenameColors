@@ -36,24 +36,24 @@ enum EAttackTypes {
 };
 
 
-class RWBY_CODENAMECOLORS_API RubyRoseComboNode
+class RWBY_CODENAMECOLORS_API ComboNode
 {
 public:
-	RubyRoseComboNode();
-	~RubyRoseComboNode();
+	ComboNode();
+	~ComboNode();
 
 	//Node Properties
 	FComboDataStruct Data;
 
-	RubyRoseComboNode* Light;
-	RubyRoseComboNode* Heavy;
-	RubyRoseComboNode* LightDash;
-	RubyRoseComboNode* HeavyDash;
+	ComboNode* Light;
+	ComboNode* Heavy;
+	ComboNode* LightDash;
+	ComboNode* HeavyDash;
 
 	EAttackTypes NodeType;
 
-	RubyRoseComboNode(FString Animation, EAttackTypes Type);
-	void FilleComboTree(RubyRoseComboNode* Root, TArray<FString> Animation, TArray<EAttackTypes> Type);
+	ComboNode(FString Animation, EAttackTypes Type);
+	void FilleComboTree(ComboNode* Root, TArray<FString> Animation, TArray<EAttackTypes> Type);
 
 	bool HasChildren();
 
@@ -61,7 +61,7 @@ public:
 
 	void CreateTree();
 
-	void CreateTreeRecursively(RubyRoseComboNode* CurrerntRoot, const FXmlNode* CurrentRootNode, int CurrentMainTreeBranch);
+	void CreateTreeRecursively(ComboNode* CurrerntRoot, const FXmlNode* CurrentRootNode, int CurrentMainTreeBranch);
 
 	FString GetInnnerXML(FString DesiredTag, const FXmlNode* CurrentRootNode, FString BaseToContain);
 

@@ -3,25 +3,11 @@
 #pragma once
 
 #include "RWBY_CodenameColorsCharacter.h"
-#include "CharacterCombos/RubyRoseComboNode.h"
 #include "RubyRose.generated.h"
 
 /**
  * 
  */
-
-
-UENUM()
-namespace EAttacks {
-	enum Type {
-		None,
-		Light,
-		Heavy,
-		Light_Dash,
-		Heavy_Dash
-	};
-}
-
 
 UCLASS()
 class RWBY_CODENAMECOLORS_API ARubyRose : public ARWBY_CodenameColorsCharacter
@@ -34,30 +20,9 @@ public:
 
 	void Tick(float DeltaSeconds) override;
 
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* Melee;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* LightMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* HeavyMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* LightDashMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* HeavyDashMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
 		float SemblanceMultiplier;
 
-
-	//Variables for combo and montage playing
-	EAttacks::Type CurrentAttack;
-	FString NextMontageSection;
-	UAnimMontage* CurrentMontagePlaying;
-	bool HitInputed;
 
 protected:
 
@@ -98,6 +63,10 @@ private:
 
 	void PerformDodge(bool bDodge) override;
 
+	void PerformLightAttack(EAttacks::Type AttackType) override;
+
+	void PerformHeavyAttack(EAttacks::Type AttackType) override;
+
 	//method used start shooting
 	void StartShooting() override;
 
@@ -116,13 +85,6 @@ private:
 	void SetAttackingBool(bool *OldBool, bool NewBoolState);
 
 	FTimerHandle Attack;
-
-	void CreateTree();
-
-	RubyRoseComboNode* BaseTree;
-	RubyRoseComboNode* CurrentSubTree;
-
-	
 
 	//void setStupid(class ARWBY_CodenameColorsCharacter* EPoweredUpState::Type);
 
@@ -147,16 +109,6 @@ public:
 		void ServerPerformDodge(bool bDodging) ;
 		void ServerPerformDodge_Implementation(bool bDodging);
 		bool ServerPerformDodge_Validate(bool bDodging);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-		void LightAttack();
-		void LightAttack_Implementation();
-		bool LightAttack_Validate();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-		void HeavyAttack();
-		void HeavyAttack_Implementation();
-		bool HeavyAttack_Validate();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void StopAttack();
