@@ -1,7 +1,6 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 #pragma once
 #include "GameFramework/Character.h"
-#include "CharacterCombos/RubyRoseComboNode.h"
 #include "RWBY_CodenameColorsCharacter.generated.h"
 
 UENUM() 
@@ -57,17 +56,6 @@ namespace EPoweredUpState {
 		GravityUp,
 		ShockedUp,
 		WateredUp,
-	};
-}
-
-UENUM()
-namespace EAttacks {
-	enum Type {
-		None,
-		Light,
-		Heavy,
-		Light_Dash,
-		Heavy_Dash
 	};
 }
 
@@ -162,10 +150,6 @@ protected:
 	//method used to stop doding
 	virtual void StopDodging();
 
-	virtual void LightAttack();
-	 
-	virtual void HeavyAttack();
-
 	void PerformHealing(bool Healing);
 
 	virtual void PerformDodge(bool bDodge);
@@ -189,10 +173,6 @@ protected:
 
 	void OnLedgeTrace();
 
-	void OnLightAttack(EAttacks::Type AttackType);
-
-	void OnHeavyAttack(EAttacks::Type AttackType);
-
 	void LedgeGrab();
 
 	void GetAimAngle();
@@ -200,17 +180,6 @@ protected:
 	void PerformCrouch();
 
 	virtual void PerformSemblance();
-
-	virtual void PerformLightAttack(EAttacks::Type);
-
-	virtual void PerformHeavyAttack(EAttacks::Type);
-
-	void CreateTree();
-
-
-	ComboNode* BaseTree;
-	ComboNode* CurrentSubTree;
-
 
 	UFUNCTION(BlueprintCallable, Category = "RWBY Character", meta = (AllowPrivateAccess = "true"))
 		void SlowDown(float NewSpeed);
@@ -349,37 +318,6 @@ public:
 	virtual void BeginPlay();
 
 	AActor* LastHitActor;
-
-
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* Melee;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* LightMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* HeavyMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* LightDashMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* HeavyDashMontage;
-
-
-	//Variables for combo and montage playing
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
-		TEnumAsByte<EAttacks::Type> CurrentAttack;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
-		FString NextMontageSection;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
-		UAnimMontage* CurrentMontagePlaying;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
-		bool HitInputed;
-
-
-
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Replicated)
 	TEnumAsByte<EPoweredUpState::Type> PoweredUpState;
@@ -585,16 +523,6 @@ protected:
 		void ServerPerformCrouch();
 		void ServerPerformCrouch_Implementation();
 		bool ServerPerformCrouch_Validate();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerPerformLightAttack(EAttacks::Type AttackType);
-		void ServerPerformLightAttack_Implementation(EAttacks::Type AttackType);
-		bool ServerPerformLightAttack_Validate(EAttacks::Type AttackType);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerPerformHeavyAttack(EAttacks::Type AttackType);
-		void ServerPerformHeavyAttack_Implementation(EAttacks::Type AttackType);
-		bool ServerPerformHeavyAttack_Validate(EAttacks::Type AttackType);
 
 
 

@@ -121,7 +121,6 @@ void ARWBY_CodenameColorsCharacter::BeginPlay(){
 
 	Super::BeginPlay();
 
-	CreateTree();
 
 
 	if (PlayerHudClass != nullptr) {
@@ -174,16 +173,6 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 	//InputComponent->BindAction("Dodge", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartDodging);
 	//InputComponent->BindAction("Dodge", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopDodging);
 
-
-
-	InputComponent->BindAction("LightAttack", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::LightAttack);
-	//InputComponent->BindAction("MeleeAttack", IE_Released, this, &ARubyRose::StopAttack);
-
-
-	InputComponent->BindAction("HeavyAttack", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::HeavyAttack);
-	//InputComponent->BindAction("Shoot", IE_Released, this, &ARubyRose::StopShooting);
-
-
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::PerformCrouch);
 	InputComponent->BindAction("Crouch", IE_Released, this, &ARWBY_CodenameColorsCharacter::OnCrouchEnd);
 
@@ -222,7 +211,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 	if (ThisPlayer) {
 
 		if (SideView && !bCanWallTrace) {
-			//ClientGetMousePos();
+			ClientGetMousePos();
 		}
 
 		//Checks if there has been a wall detected, and if so then runs the method
@@ -1413,13 +1402,14 @@ void ARWBY_CodenameColorsCharacter::OnDodge() {
 	if (ThisPlayer) {
 		//DisableInput(ThisPlayer);
 		if (!(ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling())) {
+			//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 300000, false);
 			
-				ThisPlayer->GetCharacter()->SetActorLocation(ThisPlayer->GetCharacter()->GetActorLocation() + ThisPlayer->GetCharacter()->GetActorForwardVector() * 250, false, false, ETeleportType::TeleportPhysics);
 
 			//When the player dodges teleport them forward.
+			ThisPlayer->GetCharacter()->SetActorLocation(ThisPlayer->GetCharacter()->GetActorLocation() + ThisPlayer->GetCharacter()->GetActorForwardVector() * 250, false, false, ETeleportType::TeleportPhysics);
 		}
 		else {
-			ThisPlayer->GetCharacter()->SetActorLocation(ThisPlayer->GetCharacter()->GetActorLocation() + ThisPlayer->GetCharacter()->GetActorForwardVector() * 500, false, false, ETeleportType::TeleportPhysics);
+			//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 50000, false);
 		}
 	
 	}
@@ -1447,175 +1437,6 @@ void ARWBY_CodenameColorsCharacter::PerformSemblance() {
 		ServerPerformSemblance();
 	}
 }
-
-void ARWBY_CodenameColorsCharacter::CreateTree() {
-
-
-	//ComboTree* RootNode = new ComboTree("Last Light");
-	//RootNode->Light = new ComboTree("5th Light");
-
-
-	ComboNode* RootNode = new ComboNode("Root", EAttackTypes::None);
-	ComboNode* TempRoot = RootNode;
-	FString  CurrentDir = FPaths::GameDir() + "Source/RWBY_CodenameColors/Combos.xml";
-
-	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*CurrentDir)) {
-		return;
-	}
-
-	FXmlFile* myCombo = new FXmlFile(CurrentDir, EConstructMethod::ConstructFromFile);
-	const FXmlNode* Current = myCombo->GetRootNode();
-
-	RootNode->CreateTreeRecursively(RootNode, Current, 0);
-
-	BaseTree = RootNode;
-	CurrentSubTree = BaseTree;
-
-	FString test = RootNode->Light->Data.Animation;
-
-	TArray<FXmlNode*> ChildrenNodes = myCombo->GetRootNode()->GetChildrenNodes();
-	TArray<FXmlNode*> ChildrenNodes1 = ChildrenNodes[0]->GetChildrenNodes();
-
-}
-
-
-void ARWBY_CodenameColorsCharacter::LightAttack() {
-
-	PerformLightAttack(EAttacks::Light);
-}
-
-void ARWBY_CodenameColorsCharacter::PerformLightAttack(EAttacks::Type AttackType)
-{
-
-	if (GetNetMode() == NM_Client) {
-		ServerPerformLightAttack(AttackType);
-	}
-	
-	OnLightAttack(CurrentAttack);
-}
-
-void ARWBY_CodenameColorsCharacter::ServerPerformLightAttack_Implementation(EAttacks::Type AttackType) {
-
-	PerformLightAttack(CurrentAttack);
-}
-
-bool ARWBY_CodenameColorsCharacter::ServerPerformLightAttack_Validate(EAttacks::Type AttackType) {
-	return true;
-}
-
-void ARWBY_CodenameColorsCharacter::OnLightAttack(EAttacks::Type AttackType) {
-
-
-	if (bHanging || bSliding) {
-		return;
-	}
-
-	CurrentAttack = AttackType;
-
-	if (LightMontage != NULL) {
-		if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
-			if (CurrentSubTree->Light == nullptr) {
-				NextMontageSection.Empty();
-			}
-			else {
-				if (HitInputed) {
-					return;
-				}
-				NextMontageSection = CurrentSubTree->Light->Data.Animation;
-				CurrentSubTree = CurrentSubTree->Light;
-				HitInputed = true;
-			}
-		}
-		else {
-			CurrentSubTree = BaseTree;
-			GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, 1);
-			CurrentMontagePlaying = LightMontage;
-			CurrentSubTree = CurrentSubTree->Light;
-		}
-	}
-	/*if (!LightMontage == NULL) {
-	GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
-	CurrentMontagePlaying == LightMontage;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("LightAttack"));
-	}
-	*/
-
-	SlowDown(120);
-
-	//SetAttackingBool(&bMeleeAttacking, true);
-	//PerformAttack(true);
-
-
-}
-
-
-
-void ARWBY_CodenameColorsCharacter::HeavyAttack() {
-
-	PerformHeavyAttack(EAttacks::Heavy);
-
-}
-
-void ARWBY_CodenameColorsCharacter::PerformHeavyAttack(EAttacks::Type AttackType)
-{
-
-	if (GetNetMode() == NM_Client) {
-		ServerPerformHeavyAttack(AttackType);
-	}
-
-	OnHeavyAttack(EAttacks::Heavy);
-}
-
-void ARWBY_CodenameColorsCharacter::ServerPerformHeavyAttack_Implementation(EAttacks::Type AttackType) {
-	PerformHeavyAttack(CurrentAttack);
-}
-
-bool ARWBY_CodenameColorsCharacter::ServerPerformHeavyAttack_Validate(EAttacks::Type AttackType) {
-	return true;
-}
-
-void ARWBY_CodenameColorsCharacter::OnHeavyAttack(EAttacks::Type AttackType) {
-
-	if (bHanging || bSliding) {
-		return;
-	}
-
-	CurrentAttack = AttackType;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heavy Attack"));
-
-
-	if (HitInputed) {
-		return;
-	}
-	else {
-
-		if (HeavyMontage != NULL) {
-			if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
-				if (CurrentSubTree->Heavy == nullptr) {
-					NextMontageSection.Empty();
-				}
-				else {
-
-					NextMontageSection = CurrentSubTree->Heavy->Data.Animation;
-					CurrentSubTree = CurrentSubTree->Heavy;
-					HitInputed = true;
-				}
-			}
-			else {
-				CurrentSubTree = BaseTree;
-				GetMesh()->GetAnimInstance()->Montage_Play(HeavyMontage, 1);
-				CurrentMontagePlaying = HeavyMontage;
-				CurrentSubTree = CurrentSubTree->Heavy;
-			}
-		}
-	}
-	SlowDown(120);
-
-	//SetAttackingBool(&bMeleeAttacking, true);
-	//PerformAttack(
-
-}
-
 
 void ARWBY_CodenameColorsCharacter::ServerPerformSemblance_Implementation() {
 
@@ -2014,6 +1835,7 @@ void ARWBY_CodenameColorsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeP
 	
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Dust);
 	DOREPLIFETIME(ARWBY_CodenameColorsCharacter, Semblance);
+	
 
 
 }
