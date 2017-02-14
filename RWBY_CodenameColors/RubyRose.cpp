@@ -234,6 +234,7 @@ void ARubyRose::StopDodging(){
 	PerformDodge(false);
 }
 
+
 void ARubyRose::OnDodge(){
 
 	Super::OnDodge();
@@ -246,8 +247,20 @@ void ARubyRose::OnDodge(){
 
 }
 
-void ARubyRose::LightAttack_Implementation() {
 
+
+void ARubyRose::LightAttack_Implementation() {
+	if (GetNetMode() == NM_Client) {
+		ServerPerformLightAttack();
+	}
+	NetMultiCastPerformLightAttack();
+}
+
+bool ARubyRose::LightAttack_Validate() {
+	return true;
+}
+
+void ARubyRose::ServerPerformLightAttack_Implementation() {
 	if (bHanging || bSliding) {
 		return;
 	}
@@ -275,28 +288,62 @@ void ARubyRose::LightAttack_Implementation() {
 			CurrentSubTree = CurrentSubTree->Light;
 		}
 	}
-	/*if (!LightMontage == NULL) {
-	GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
-	CurrentMontagePlaying == LightMontage;
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("LightAttack"));
-	}
-	*/
-
 	SlowDown(120);
-
-	//SetAttackingBool(&bMeleeAttacking, true);
-	//PerformAttack(true);
-
 }
 
+bool ARubyRose::ServerPerformLightAttack_Validate() {
+	return true;
+}
 
-bool ARubyRose::LightAttack_Validate() {
+void ARubyRose::NetMultiCastPerformLightAttack_Implementation() {
+	if (bHanging || bSliding) {
+		return;
+	}
+
+	CurrentAttack = EAttacks::Light;
+
+	if (LightMontage != NULL) {
+		if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
+			if (CurrentSubTree->Light == nullptr) {
+				NextMontageSection.Empty();
+			}
+			else {
+				if (HitInputed) {
+					return;
+				}
+				NextMontageSection = CurrentSubTree->Light->Data.Animation;
+				CurrentSubTree = CurrentSubTree->Light;
+				HitInputed = true;
+			}
+		}
+		else {
+			CurrentSubTree = BaseTree;
+			GetMesh()->GetAnimInstance()->Montage_Play(LightMontage, SemblanceMultiplier);
+			CurrentMontagePlaying = LightMontage;
+			CurrentSubTree = CurrentSubTree->Light;
+		}
+	}
+	SlowDown(120);
+}
+
+bool ARubyRose::NetMultiCastPerformLightAttack_Validate() {
 	return true;
 }
 
 
-void ARubyRose::HeavyAttack_Implementation() {
 
+void ARubyRose::HeavyAttack_Implementation() {
+	if (GetNetMode() == NM_Client) {
+		ServerPerformHeavyAttack();
+	}
+	NetMultiCastPerformHeavyAttack();
+}
+
+bool ARubyRose::HeavyAttack_Validate() {
+	return true;
+}
+
+void ARubyRose::ServerPerformHeavyAttack_Implementation() {
 	if (bHanging || bSliding) {
 		return;
 	}
@@ -334,13 +381,57 @@ void ARubyRose::HeavyAttack_Implementation() {
 
 	//SetAttackingBool(&bMeleeAttacking, true);
 	//PerformAttack(true);
-
 }
 
-
-bool ARubyRose::HeavyAttack_Validate() {
+bool ARubyRose::ServerPerformHeavyAttack_Validate() {
 	return true;
 }
+
+void ARubyRose::NetMultiCastPerformHeavyAttack_Implementation() {
+	if (bHanging || bSliding) {
+		return;
+	}
+
+	CurrentAttack = EAttacks::Heavy;
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Heavy Attack"));
+
+
+	if (HitInputed) {
+		return;
+	}
+	else {
+
+		if (HeavyMontage != NULL) {
+			if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
+				if (CurrentSubTree->Heavy == nullptr) {
+					NextMontageSection.Empty();
+				}
+				else {
+
+					NextMontageSection = CurrentSubTree->Heavy->Data.Animation;
+					CurrentSubTree = CurrentSubTree->Heavy;
+					HitInputed = true;
+				}
+			}
+			else {
+				CurrentSubTree = BaseTree;
+				GetMesh()->GetAnimInstance()->Montage_Play(HeavyMontage, SemblanceMultiplier);
+				CurrentMontagePlaying = HeavyMontage;
+				CurrentSubTree = CurrentSubTree->Heavy;
+			}
+		}
+	}
+	SlowDown(120);
+
+	//SetAttackingBool(&bMeleeAttacking, true);
+	//PerformAttack(true);
+}
+
+bool ARubyRose::NetMultiCastPerformHeavyAttack_Validate() {
+	return true;
+}
+
+
 
 void ARubyRose::StopAttack_Implementation(){
 
@@ -658,5 +749,15 @@ void ARubyRose::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> & OutLifeti
 	DOREPLIFETIME(ARubyRose, bCanDealAttackDamage);
 	DOREPLIFETIME(ARubyRose, Melee);
 	DOREPLIFETIME(ARubyRose, SemblanceMultiplier);
-	
+
+
+	DOREPLIFETIME(ARubyRose, CurrentAttack);
+	DOREPLIFETIME(ARubyRose, NextMontageSection);
+	DOREPLIFETIME(ARubyRose, CurrentMontagePlaying);
+	DOREPLIFETIME(ARubyRose, HitInputed);
+
+	DOREPLIFETIME(ARubyRose, LightMontage);
+	DOREPLIFETIME(ARubyRose, HeavyMontage);
+
 }
+

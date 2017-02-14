@@ -1,6 +1,7 @@
 // Copyright 1998-2016 Epic Games, Inc. All Rights Reserved.
 #pragma once
 #include "GameFramework/Character.h"
+#include "CharacterCombos/RubyRoseComboNode.h"
 #include "RWBY_CodenameColorsCharacter.generated.h"
 
 UENUM() 
@@ -59,6 +60,16 @@ namespace EPoweredUpState {
 	};
 }
 
+UENUM()
+namespace EAttacks {
+	enum Type {
+		None,
+		Light,
+		Heavy,
+		Light_Dash,
+		Heavy_Dash
+	};
+}
 
 UCLASS(config=Game)
 class ARWBY_CodenameColorsCharacter : public ACharacter
@@ -371,6 +382,40 @@ public:
 	void DealDamage(float Damage, FHitResult LineTrace);
 
 
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* Melee;
+
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* LightMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* HeavyMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* LightDashMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* HeavyDashMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
+		float SemblanceMultiplier;
+
+
+	//Variables for combo and montage playing
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
+		TEnumAsByte<EAttacks::Type> CurrentAttack;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
+		FString NextMontageSection;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
+		UAnimMontage* CurrentMontagePlaying;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
+		bool HitInputed;
+
+
+	RubyRoseComboNode* BaseTree;
+	RubyRoseComboNode* CurrentSubTree;
+
+
 	/*Replication methods (on_Reps)
 	*
 	*
@@ -520,10 +565,7 @@ protected:
 		bool ServerGetAngleOffset_Validate(float CenterX, float CenterY, float MouseX, float MouseY);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerPerformCrouch();
-		void ServerPerformCrouch_Implementation();
-		bool ServerPerformCrouch_Validate();
-
-
-
+		virtual void ServerPerformCrouch();
+		virtual void ServerPerformCrouch_Implementation();
+		virtual bool ServerPerformCrouch_Validate();
 };

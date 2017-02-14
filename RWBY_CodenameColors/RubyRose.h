@@ -3,24 +3,11 @@
 #pragma once
 
 #include "RWBY_CodenameColorsCharacter.h"
-#include "CharacterCombos/RubyRoseComboNode.h"
 #include "RubyRose.generated.h"
 
 /**
  * 
  */
-
-
-UENUM()
-namespace EAttacks {
-	enum Type {
-		None,
-		Light,
-		Heavy,
-		Light_Dash,
-		Heavy_Dash
-	};
-}
 
 
 UCLASS()
@@ -33,31 +20,28 @@ public:
 	ARubyRose();
 
 	void Tick(float DeltaSeconds) override;
+	/*
+	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
+		UAnimMontage* Melee override;
 
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* Melee;
+		UAnimMontage* LightMontage override;
 
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* LightMontage;
+		UAnimMontage* HeavyMontage override;
 
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* HeavyMontage;
+		UAnimMontage* LightDashMontage override;
 
 	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* LightDashMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Ruby Rose", Replicated)
-		UAnimMontage* HeavyDashMontage;
+		UAnimMontage* HeavyDashMontage override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ruby Rose", Replicated)
 		float SemblanceMultiplier;
 
+		*/
+	
 
-	//Variables for combo and montage playing
-	EAttacks::Type CurrentAttack;
-	FString NextMontageSection;
-	UAnimMontage* CurrentMontagePlaying;
-	bool HitInputed;
 
 protected:
 
@@ -118,10 +102,6 @@ private:
 	FTimerHandle Attack;
 
 	void CreateTree();
-
-	RubyRoseComboNode* BaseTree;
-	RubyRoseComboNode* CurrentSubTree;
-
 	
 
 	//void setStupid(class ARWBY_CodenameColorsCharacter* EPoweredUpState::Type);
@@ -148,15 +128,28 @@ public:
 		void ServerPerformDodge_Implementation(bool bDodging);
 		bool ServerPerformDodge_Validate(bool bDodging);
 
-	UFUNCTION(Server, Reliable, WithValidation)
+		/*
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
 		void LightAttack();
 		void LightAttack_Implementation();
 		bool LightAttack_Validate();
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void HeavyAttack();
-		void HeavyAttack_Implementation();
-		bool HeavyAttack_Validate();
+		void ServerLightAttack();
+		void ServerLightAttack_Implementation();
+		bool ServerLightAttack_Validate();
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		void AnimationTesting();
+		void AnimationTesting_Implementation();
+		bool AnimationTesting_Validate();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void AnimationTesting1();
+		void AnimationTesting1_Implementation();
+		bool AnimationTesting1_Validate1();
+		*/
+	
 
 	UFUNCTION(Server, Reliable, WithValidation)
 		void StopAttack();
@@ -178,4 +171,36 @@ public:
 		void ServerSetValue_Implementation(float NewFloatValue);
 		bool ServerSetValue_Validate(float NewFloatValue);
 
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		 void LightAttack();
+		 void LightAttack_Implementation();
+		 bool LightAttack_Validate();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		 void ServerPerformLightAttack();
+		 void ServerPerformLightAttack_Implementation();
+		 bool ServerPerformLightAttack_Validate();
+
+		UFUNCTION(NetMulticast, Reliable, WithValidation)
+		void NetMultiCastPerformLightAttack();
+		void NetMultiCastPerformLightAttack_Implementation();
+		bool NetMultiCastPerformLightAttack_Validate();
+
+
+
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		void HeavyAttack();
+		void HeavyAttack_Implementation();
+		bool HeavyAttack_Validate();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerPerformHeavyAttack();
+		void ServerPerformHeavyAttack_Implementation();
+		bool ServerPerformHeavyAttack_Validate();
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+		void NetMultiCastPerformHeavyAttack();
+		void NetMultiCastPerformHeavyAttack_Implementation();
+		bool NetMultiCastPerformHeavyAttack_Validate();
 };

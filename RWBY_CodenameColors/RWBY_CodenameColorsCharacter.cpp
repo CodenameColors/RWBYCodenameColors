@@ -179,6 +179,8 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 	InputComponent->BindAction("Healing", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartHealing);
 	InputComponent->BindAction("Healing", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopHealing);
 
+	//InputComponent->BindAction("LightAttack", IE_Pressed, this, &ARubyRose::AnimationTesting);
+
 	//fInputComponent->BindAction("Semblance", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::UseSemblance);
 	
 	InputComponent->BindAction("Use Dust", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::UseDust);
@@ -1671,6 +1673,7 @@ void ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Implementation(float Ce
 bool ARWBY_CodenameColorsCharacter::ServerGetAngleOffset_Validate(float CenterX, float CenterY, float MouseX, float MouseY) {
 	return true;
 }
+
 
 void ARWBY_CodenameColorsCharacter::ResetDust() {
 
