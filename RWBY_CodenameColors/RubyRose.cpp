@@ -733,7 +733,7 @@ void ARubyRose::OnRep_Task() {
 void ARubyRose::OnRep_MeleeAttack() {
 	
 	if (GetMesh()->GetAnimInstance()->IsAnyMontagePlaying()) {
-		
+		//
 	}
 	else {
 		GetMesh()->GetAnimInstance()->Montage_Play(Melee, SemblanceMultiplier);
