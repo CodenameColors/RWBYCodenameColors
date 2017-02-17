@@ -15,6 +15,7 @@ void UClearAttackState::Notify(USkeletalMeshComponent * MeshComp, UAnimSequenceB
 			//TestRuby->CurrentAttack = EAttacks::None;
 			TestRuby->HitInputed = false;
 			TestRuby->NextMontageSection = "";
+			TestRuby->LastHitActor = nullptr;
 		}
 	}
 }
