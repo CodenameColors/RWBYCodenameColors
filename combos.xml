@@ -1,0 +1,121 @@
+<MeleeAttacking name="StartMeleeAttacking">
+    
+    <Light name="ComboOneStart">
+        
+        <Heavy name="ComboThreeStart"> 
+            <Light>
+            
+            </Light>
+        </Heavy>
+        <Light>
+            
+            <Heavy>
+                <Heavy name="ComboThreeEnd">
+                    <!-- End of combo 3 -->
+                    
+                    <end/>
+                </Heavy>
+            </Heavy>
+            
+            <Light name="ComboFourStart">    
+                <Heavy>
+                    <!-- part of combo 4 -->
+                    <Light>
+                        <Heavy-Dash name="ComboFourEnd">
+
+                            <end/>
+                        </Heavy-Dash>
+                    </Light>
+                </Heavy>
+                
+                <light>
+                    <light>
+                        <Light name="ComboOneEnd">
+                            
+                            <end/> <!-- part of combo 1-->
+                        </Light>
+                    </light>
+                </light>
+            </Light>
+        </Light>
+    </Light>
+    
+    
+    <Heavy name="ComboTwoStart">
+        <Heavy name="ComboSevenStart">
+            
+            <Light>
+                <Heavy>
+                    <Heavy-dash name="ComboSevenEnd">
+                        
+                        <!-- End of combo 7 -->
+                        <end/>
+                    </Heavy-dash>
+                </Heavy>
+            </Light>
+            
+            <Heavy>
+                <Heavy>
+                    <Heavy>
+                        <Heavy name="ComboTwoEnd">
+                            
+                            
+                            <end/> <!-- part of combo 2 -->
+                        </Heavy>
+                    </Heavy>
+                </Heavy>
+            </Heavy>
+        </Heavy>
+    </Heavy>
+    
+    <Light-Dash name="ComboEightStart">
+        <Heavy>
+            <Heavy>
+                <Heavy>
+                    <Heavy>
+                        </end> <!-- End of combo 8 -->
+                    </Heavy>
+                    
+                    <Light>
+                        <Light-Dash name="ComboEightEnd">
+                                        
+                            </end> <!-- End of combo 9 -->
+                        </Light-Dash>
+                    </Light>
+                </Heavy>
+            </Heavy>
+                   
+            <Light name="ComboFiveStart">
+                <Light>
+                    <Heavy>
+                        <Heavy name="ComboFiveEnd">
+                            
+                            <end/> <!-- End of combo 5 -->
+                        </Heavy>
+                    </Heavy>
+                </Light>
+            </Light>
+        </Heavy>
+    </Light-Dash>
+
+    
+    <Heavy-Dash name="ComboSixStart">
+        <Light>
+            <Light>
+                
+                <Heavy>
+                    <Heavy-Dash>
+                        <end/> <!-- END OF COMBO ___ -->
+                    </Heavy-Dash>
+                </Heavy>
+                
+                <Light>
+                    <Heavy>
+                        <end/> <!-- End of combo 6 -->
+                    </Heavy>
+                </Light>
+            </Light>
+        </Light>
+    </Heavy-Dash>
+
+</MeleeAttacking>
