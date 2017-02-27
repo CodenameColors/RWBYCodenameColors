@@ -20,6 +20,8 @@ public:
 	void OnKilled();
 
 	void Respawn();
+
+	void SetMaxSpeed();
 	
 	
 };

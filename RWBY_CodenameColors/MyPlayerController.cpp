@@ -15,9 +15,15 @@ void AMyPlayerController::Respawn() {
 	AGameMode* GameMode = GetWorld()->GetAuthGameMode();
 
 	if (GameMode) {
-		APawn * NewPawn = GameMode->SpawnDefaultPawnFor(this, StartSpot.Get());;
+		//APawn * NewPawn = GameMode->SpawnDefaultPawnFor(this, StartSpot.Get());
+		APawn * NewPawn = this->GetActorClass;
 		Possess(NewPawn);
 	}
+}
+
+void AMyPlayerController::SetMaxSpeed() {
+	GetCharacter()->GetCharacterMovement()->MaxWalkSpeed = 120;
+
 }
 
 
