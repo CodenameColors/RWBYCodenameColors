@@ -475,7 +475,7 @@ public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetThirdPersonCameraBoom() const { return ThirdPersonCameraBoom; }
+	FORCEINLINE class USpringArmComponent* GetThirdPersonCameraBoom() const { return ThirdPersonBoom; }
 
 
 	/*

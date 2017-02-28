@@ -520,8 +520,12 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
 		case(ECameraType::None) :
 			break;
-		case(ECameraType::Side):
+		case(ECameraType::Side) :
+			
 			SideViewCameraComponent->Deactivate();
+			ThirdPersonBoom->bUsePawnControlRotation = true;
+			ThirdPersonBoom->bAbsoluteRotation = true;
+			ThirdPersonBoom->AddWorldRotation(FRotator(0, 180, 0));
 			FollowCamera->Activate();
 			Perspective = ECameraType::Third;
 			SetCameraPerspective(false);
