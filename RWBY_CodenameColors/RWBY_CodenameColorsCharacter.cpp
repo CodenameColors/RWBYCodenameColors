@@ -502,6 +502,7 @@ void ARWBY_CodenameColorsCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+
 }
 
 // Turns Chracter based on the MOUSE Y input
@@ -516,17 +517,31 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 
+	FString PickupDebugString = FString::SanitizeFloat((int)Controller->GetControlRotation().Yaw);
+	int killme[] = { 180 - ThisPlayer->GetControlRotation().Yaw, 0 - ThisPlayer->GetControlRotation().Roll, 0 - ThisPlayer->GetControlRotation().Pitch} ;
+	float orignalscale[] = { ThisPlayer->InputYawScale , ThisPlayer->InputRollScale, ThisPlayer->InputPitchScale};
 	switch(Perspective){
 
 		case(ECameraType::None) :
 			break;
 		case(ECameraType::Side) :
-			
-			SideViewCameraComponent->Deactivate();
-			ThirdPersonBoom->bUsePawnControlRotation = true;
-			ThirdPersonBoom->bAbsoluteRotation = true;
-			ThirdPersonBoom->AddWorldRotation(FRotator(0, 180, 0));
 			FollowCamera->Activate();
+			SideViewCameraComponent->Deactivate();
+
+			//This will set the third person camera to the 2nd person cameras rotation.
+			ThisPlayer->InputYawScale = 1;
+			ThisPlayer->InputRollScale = 1;
+			ThisPlayer->InputPitchScale = 1;
+
+			if (killme[0] != 180) {
+				AddControllerYawInput(killme[0]);
+				AddControllerRollInput(killme[1]);
+				AddControllerPitchInput(killme[2]);
+			}
+			ThisPlayer->InputYawScale =    orignalscale[0];
+			ThisPlayer->InputRollScale =   orignalscale[1];
+			ThisPlayer->InputPitchScale =  orignalscale[2];
+
 			Perspective = ECameraType::Third;
 			SetCameraPerspective(false);
 			ThisPlayer->bShowMouseCursor = false;
