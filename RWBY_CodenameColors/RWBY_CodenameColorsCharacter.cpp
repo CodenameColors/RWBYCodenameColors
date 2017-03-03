@@ -68,7 +68,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	ThirdPersonBoom->AttachTo(RootComponent);
 	ThirdPersonBoom->bAbsoluteRotation = true; // Rotation of the character should not affect rotation of boom
 	ThirdPersonBoom->bDoCollisionTest = false;
-	ThirdPersonBoom->TargetArmLength = 175;
+	ThirdPersonBoom->TargetArmLength = 220;
 	ThirdPersonBoom->SocketOffset = FVector(20.f, 75.f, 60.f);
 	ThirdPersonBoom->RelativeRotation = FRotator(-10.f, -10, 0.f);
 
@@ -528,6 +528,11 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 			FollowCamera->Activate();
 			SideViewCameraComponent->Deactivate();
 
+			ThirdPersonBoom->TargetArmLength = 500;
+			while (ThirdPersonBoom->TargetArmLength > 220) {
+				ThirdPersonBoom->TargetArmLength -= 1 * .0001;
+			}
+
 			//This will set the third person camera to the 2nd person cameras rotation.
 			ThisPlayer->InputYawScale = 1;
 			ThisPlayer->InputRollScale = 1;
@@ -547,8 +552,9 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 			ThisPlayer->bShowMouseCursor = false;
 			break;
 		case(ECameraType::Third):
-			FollowCamera->Deactivate();
-			SideViewCameraComponent->Activate();
+			//FollowCamera->Deactivate();
+			//SideViewCameraComponent->Activate();
+
 			Perspective = ECameraType::Side;
 			SetCameraPerspective(true);
 			ThisPlayer->bShowMouseCursor = true;
