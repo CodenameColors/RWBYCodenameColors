@@ -520,18 +520,21 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 	FString PickupDebugString = FString::SanitizeFloat((int)Controller->GetControlRotation().Yaw);
 	int killme[] = { 180 - ThisPlayer->GetControlRotation().Yaw, 0 - ThisPlayer->GetControlRotation().Roll, 0 - ThisPlayer->GetControlRotation().Pitch} ;
 	float orignalscale[] = { ThisPlayer->InputYawScale , ThisPlayer->InputRollScale, ThisPlayer->InputPitchScale};
+	FVector temp = SideViewCameraComponent->GetComponentLocation();
 	switch(Perspective){
 
 		case(ECameraType::None) :
 			break;
 		case(ECameraType::Side) :
+
+			
+
+			while (SideViewCameraComponent->GetComponentLocation().X >= FollowCamera->GetComponentLocation().X + 10) {
+				this->SideViewCameraComponent->SetWorldLocation(FMath::VInterpTo(this->SideViewCameraComponent->GetComponentLocation(), this->FollowCamera->GetComponentLocation(),
+					GetWorld()->GetDeltaSeconds(), 10.f));
+			}
 			FollowCamera->Activate();
 			SideViewCameraComponent->Deactivate();
-
-			ThirdPersonBoom->TargetArmLength = 500;
-			while (ThirdPersonBoom->TargetArmLength > 220) {
-				ThirdPersonBoom->TargetArmLength -= 1 * .0001;
-			}
 
 			//This will set the third person camera to the 2nd person cameras rotation.
 			ThisPlayer->InputYawScale = 1;
@@ -547,13 +550,20 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 			ThisPlayer->InputRollScale =   orignalscale[1];
 			ThisPlayer->InputPitchScale =  orignalscale[2];
 
+			
 			Perspective = ECameraType::Third;
 			SetCameraPerspective(false);
 			ThisPlayer->bShowMouseCursor = false;
+
+			SideViewCameraComponent->SetWorldLocation(temp);
+
 			break;
 		case(ECameraType::Third):
-			//FollowCamera->Deactivate();
-			//SideViewCameraComponent->Activate();
+			
+			
+			FollowCamera->Deactivate();
+			SideViewCameraComponent->Activate();
+
 
 			Perspective = ECameraType::Side;
 			SetCameraPerspective(true);
@@ -1433,7 +1443,16 @@ void ARWBY_CodenameColorsCharacter::OnDodge() {
 			
 
 			//When the player dodges teleport them forward.
-			ThisPlayer->GetCharacter()->SetActorLocation(ThisPlayer->GetCharacter()->GetActorLocation() + ThisPlayer->GetCharacter()->GetActorForwardVector() * 250, false, false, ETeleportType::TeleportPhysics);
+			//ThisPlayer->GetCharacter()->SetActorLocation(ThisPlayer->GetCharacter()->GetActorLocation() + ThisPlayer->GetCharacter()->GetActorForwardVector() * 250, false, false, ETeleportType::TeleportPhysics);
+			FLatentActionInfo LatentInfo;
+			LatentInfo.CallbackTarget = this;
+			FRotator CharRot = ThisPlayer->GetCharacter()->GetActorRotation();
+
+			FVector Up = FVector(ClimbPosition.X, ThisPlayer->GetCharacter()->GetActorLocation().Y, ClimbPosition.Z - 50);
+			FVector For = FVector(ThisPlayer->GetCharacter()->GetActorForwardVector().X, ThisPlayer->GetCharacter()->GetActorForwardVector().Y, 0);
+
+
+			UKismetSystemLibrary::MoveComponentTo(RootComponent, ThisPlayer->GetCharacter()->GetActorLocation() + For * 500, CharRot, false, false, .10f, EMoveComponentAction::Move, LatentInfo);
 		}
 		else {
 			//ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(ThisPlayer->GetCharacter()->GetActorForwardVector() * 50000, false);
