@@ -12,23 +12,27 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Blueprint/UserWidget.h"
 
+
+//this is called once a RWBY character is created. Sets default values
 ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 	//GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Overlap);
 
+	//we created this component in header file now we need to give it some data to work with
 	SphereWallTrace = CreateDefaultSubobject<USphereComponent>(TEXT("Trigger Sphere"));
 	SphereWallTrace->SetSphereRadius(60);
 	SphereWallTrace->AttachTo(RootComponent);
 
+	//The created component is trigger so once overlapped it needs to delegate functions
 	SphereWallTrace->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnOverlap);
 	SphereWallTrace->OnComponentEndOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnOverlapEnd);
 
+	//Camera stuff
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
-
 
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	CharMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharMeshTest"));
@@ -39,12 +43,11 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	CharMesh->RelativeRotation = FRotator(0.f, 0.f, 0.f);
 	CharMesh->RelativeLocation = FVector(0.f, 0.f, -98.f);
 
+	//this is the base class so set the most default model for the skeleton possible
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CMesh(TEXT("SkeletalMesh'/Game/Mannequin/Character/Mesh/SK_Mannequin.SK_Mannequin'"));
-
+	//cast succeded?
 	if (CMesh.Succeeded()) {
-
 		CharMesh->SetSkeletalMesh(CMesh.Object);
-
 	}
 
 	CharMesh->RelativeRotation = FRotator(0.f, -90.f, 0.f);
@@ -63,7 +66,7 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	SideViewCameraComponent->AttachTo(CameraBoom, USpringArmComponent::SocketName);
 	SideViewCameraComponent->bUsePawnControlRotation = false; // We don't want the controller rotating the camera
 
-
+	// Create a camera boom attached to the root (capsule)
 	ThirdPersonBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPeresonCameraBoom"));
 	ThirdPersonBoom->AttachTo(RootComponent);
 	ThirdPersonBoom->bAbsoluteRotation = true; // Rotation of the character should not affect rotation of boom
@@ -93,36 +96,28 @@ ARWBY_CodenameColorsCharacter::ARWBY_CodenameColorsCharacter(){
 	//Setting default values
 	Perspective = ECameraType::Side;
 
+	//setting default values for gameplay purposes
 	Health = 100;
-
 	CurrentAmmo = 5;
-
 	bCanPickupDust = true;
 	bCanWallTrace = false;
 	bCanClimb = false;
 	bCanWallSlide = false;
 	FrozenPercent = 100;
-
 	Dust = EDustType::None;
 	CharacterState = ECharacterState::Normal;
-
 	LastHitActor = nullptr;
 	SetCameraPerspective(true);
-	//CharacterStatusEffects.Add(ECharacterState::Normal);
-
-	//GetSphereTracer()->OnComponentBeginOverlap.AddDynamic(this, &ARWBY_CodenameColorsCharacter::OnBeginOverlap);
-
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
 
+//Called when the character becomes active
 void ARWBY_CodenameColorsCharacter::BeginPlay(){
 
+	//call super and set the HUD for the characters
 	Super::BeginPlay();
-
-
-
 	if (PlayerHudClass != nullptr) {
 		CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), PlayerHudClass);
 		if (CurrentWidget != nullptr) {
@@ -133,14 +128,13 @@ void ARWBY_CodenameColorsCharacter::BeginPlay(){
 
 }
 
-void ARWBY_CodenameColorsCharacter::OnOverlap(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult & SweepResult) {
-	
+//did you hit a wall?
+void ARWBY_CodenameColorsCharacter::OnOverlap(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool FromSweep, const FHitResult & SweepResult) {	
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Entered Wall"));
-
 	bCanWallTrace = true;
-
 }
 
+//after you hit the wall... did you leave the trigger area of the wall?
 void ARWBY_CodenameColorsCharacter::OnOverlapEnd(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) {
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Exited Wall"));
@@ -153,9 +147,8 @@ void ARWBY_CodenameColorsCharacter::OnOverlapEnd(class AActor* OtherActor, class
 	bWallJumping = false;
 }
 
-//////////////////////////////////////////////////////////////////////////
-// Input
 
+//Sets up the input components for the users. AKA keyboard and controller movements and buttons. Needs to also be set in the editor
 void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 {
 	// set up gameplay key bindings
@@ -167,6 +160,7 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 	InputComponent->BindAction("PerspectiveSwitch", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::SwitchCamera);
 
+	// THESE EXIST AND DO WORK I COMMENT THEM OUT SO AND REDEFINE THEM IN EACH CHARACTER SPECIFIC CLASS SO THEY WORK DIFFERENT
 	//InputComponent->BindAction("Shoot", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartShooting);
 	//InputComponent->BindAction("Shoot", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopShooting);
 
@@ -178,10 +172,6 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 
 	InputComponent->BindAction("Healing", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::StartHealing);
 	InputComponent->BindAction("Healing", IE_Released, this, &ARWBY_CodenameColorsCharacter::StopHealing);
-
-	//InputComponent->BindAction("LightAttack", IE_Pressed, this, &ARubyRose::AnimationTesting);
-
-	//fInputComponent->BindAction("Semblance", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::UseSemblance);
 	
 	InputComponent->BindAction("Use Dust", IE_Pressed, this, &ARWBY_CodenameColorsCharacter::UseDust);
 
@@ -190,17 +180,15 @@ void ARWBY_CodenameColorsCharacter::SetupPlayerInputComponent(class UInputCompon
 	//Allows the character to look up baed on the mouse
 	InputComponent->BindAxis("LookUpRate", this, &ARWBY_CodenameColorsCharacter::LookUpAtRate);
 
-
 	//Allows the Chracter to turn based on controler input (not working ATM)
 	InputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 
 	//Allows the character to look up based on controller input (not working ATM)
 	InputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-
-
 }
 
-
+//THIS METHOD IS CALLED EVERYFRAME TRY TO AVOID USING THIS. EVENTS AND DELEGATES ARE BETTER IF CAN BE DONE
+//SOME MULTIPLAYER THINGS DO NEED THIS. LIKE LERP
 void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 	
 	Super::Tick(DeltaSeconds);
@@ -212,6 +200,7 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 
 	if (ThisPlayer) {
 
+		//are you in 2D mode? and are you not on a wall?
 		if (SideView && !bCanWallTrace) {
 			ClientGetMousePos();
 		}
@@ -228,14 +217,15 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 			PerformWallSlide(bCanWallSlide);
 		}
 
+		//have you died? Don't execute this if so
 		if (ThisPlayer->GetCharacter() != nullptr) {
+			//Checks to see if you have reached a falling speed threshold. If so allow fall damage
 			if (ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling() && ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -2200) {
 				bFalling = true;
 				DownwardVelocity.Add(ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z);
 			}
 
-
-
+			//Do the fall damage
 			if (!ThisPlayer->GetCharacter()->GetCharacterMovement()->IsFalling() && bFalling) {
 				if (DownwardVelocity.Num() > 0) {
 					Health -= DownwardVelocity.Last() / -130;
@@ -247,29 +237,23 @@ void ARWBY_CodenameColorsCharacter::Tick(float DeltaSeconds){
 			}
 		}
 
-		
-
 		//once your character is done climbing you need to reset all variables assoicated with climbing
 		if (bDoneClimbing) {
-
 			bDoneClimbing = false;
 			bCanClimb = false;
 			bCanWallTrace = false;
 			bClimbing = false;
 			bHanging = false;
 			bSliding = false;
-
-			//AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 
-			//ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
-			//UKismetSystemLibrary::MoveComponentTo(RootComponent, ClimbPosition, CharRot, false, false, .34f, EMoveComponentAction::Move, LatentInfo);
 		}
 	}
 }
 
 
 //UNUSED AT THE MOMENT
+//DELETE: Later
 void ARWBY_CodenameColorsCharacter::MoveCharacter( ){
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	ThisPlayer->GetCharacter()->SetActorLocation(ClimbPosition, false, false);
@@ -278,11 +262,9 @@ void ARWBY_CodenameColorsCharacter::MoveCharacter( ){
 	bHanging = false;
 
 	ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-
-
 }
 
-
+//Is a jump button pressed? 
 void ARWBY_CodenameColorsCharacter::StartJump(){
 	
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -299,10 +281,9 @@ void ARWBY_CodenameColorsCharacter::StartJump(){
 			LatentInfo.CallbackTarget = this;
 			FRotator CharRot = ThisPlayer->GetCharacter()->GetActorRotation();
 
+			//move the player up to climb
 			FVector Up = FVector(ClimbPosition.X, ThisPlayer->GetCharacter()->GetActorLocation().Y, ClimbPosition.Z - 50);
-
 			UKismetSystemLibrary::MoveComponentTo(RootComponent, Up, CharRot, false, false, .84f, EMoveComponentAction::Move, LatentInfo);
-
 		}
 		//slide if can't clumb at the current moment
 		else if (bSliding && !bHanging) {
@@ -329,28 +310,30 @@ bool ARWBY_CodenameColorsCharacter::SetClimbing_Validate(bool NewState){
 	return true;
 }
 
-
+//Jump button released. 
 void ARWBY_CodenameColorsCharacter::StopJump() {
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Space Released"));
 	bPressedJump = false;
 	bClimbing = false;
+
+	//THIS THING RIGHT HERE ALLOWS DOUBLE JUMPS AND BEYOND.
+	//In this case we set it to 0 to reset our characters jump state
 	JumpKeyHoldTime = 0.0f;
 }
 
+//crouch is used as a method to stop holding the ledge
 void ARWBY_CodenameColorsCharacter::PerformCrouch() {
 
-	//bHanging = false;
 	bCanWallTrace = false;
 	bCanClimb = false;
-
-	if(GetNetMode() == NM_Client){
+	if (GetNetMode() == NM_Client) {
 		ServerPerformCrouch();
 	}
-	
 	OnCrouchStart();
 }
 
+//Call the crouch method call from the client on the server to sink everything up
 void ARWBY_CodenameColorsCharacter::ServerPerformCrouch_Implementation() {
 	PerformCrouch();
 }
@@ -383,19 +366,19 @@ bool ARWBY_CodenameColorsCharacter::OnCrouchStart_Validate() {
 	return true;
 }
 
+//WHY EMPTY?
 void ARWBY_CodenameColorsCharacter::OnCrouchEnd(){
 	
 	
 }
 
-// Moves the Charcter forward
+//moves character forward in relativetly to the camera in use
 void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 {
-
+	//are you hanging off the ledge or wall jumping? then don't allow movement
 	if (bHanging || bWallJumping) {
 		return;
 	}
-
 	//Checks to see what camera the player is current using
 	switch (Perspective) {
 		case(ECameraType::None) :
@@ -448,6 +431,7 @@ void ARWBY_CodenameColorsCharacter::MoveForward(float Value)
 		}
 }
 
+//moves character to the right in relativetly to the camera in use
 void ARWBY_CodenameColorsCharacter::MoveRight(float Value)
 {
 
@@ -513,6 +497,8 @@ void ARWBY_CodenameColorsCharacter::LookUpAtRate(float Rate)
 }
 
 //This method will allow the player to switch cameras
+//TODO: change the code to create a smooth transistion between camera modes
+//      Needs to move cameras to eachother and fade
 void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -526,8 +512,6 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 		case(ECameraType::None) :
 			break;
 		case(ECameraType::Side) :
-
-			
 
 			while (SideViewCameraComponent->GetComponentLocation().X >= FollowCamera->GetComponentLocation().X + 10) {
 				this->SideViewCameraComponent->SetWorldLocation(FMath::VInterpTo(this->SideViewCameraComponent->GetComponentLocation(), this->FollowCamera->GetComponentLocation(),
@@ -573,13 +557,14 @@ void ARWBY_CodenameColorsCharacter::SwitchCamera() {
 
 }
 
-// Sets a new camera perspective to use
+// Sets a new camera perspective to use (multiplayer)
 void ARWBY_CodenameColorsCharacter::SetCameraPerspective_Implementation(bool NewCameraState) {
 
 	SideView = NewCameraState;
 
 }
 
+//Allows multiplayer
 bool ARWBY_CodenameColorsCharacter::SetCameraPerspective_Validate(bool NewCameraState) {
 	return true;
 }
@@ -617,16 +602,15 @@ void ARWBY_CodenameColorsCharacter::OnWallSlide() {
 	if (ThisPlayer) {
 		if (!bHanging && !bCanClimb) {
 			if (ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z < -50) {
+				//side view?
 				if (SideView) {
+					//then slow down and don't allow any X axis movement
 					ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z = -200;
-					//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
 					ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.X = 0;
-					//ThisPlayer->GetCharacter()->SetActorRotation(ThisPlayer->GetCharacter()->GetActorRotation() * -1);
 				}
 				else {
+					//slow down
 					ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Z = -200;
-					//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.Y = 0;
-					//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity.X = 0;
 				}
 			}
 		}
@@ -764,7 +748,7 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 			FCollisionObjectQueryParams CeilingObjectQueryParams;
 
 			bool bCeilingHit = ThePC->GetWorld()->LineTraceSingle(CeliingCheck, Start, Start + ThisPlayer->GetCharacter()->GetActorUpVector() * 250, TraceParams, CamObjectQueryParams);
-
+			// you found a ledge to grab on to! but does it go through the ceiling? don't allow that
 			if (bCeilingHit) {
 
 				bCanClimb = false;
@@ -822,63 +806,30 @@ void ARWBY_CodenameColorsCharacter::OnLedgeTrace() {
 					bCanClimb = true;
 					ClimbPosition = DownStart + ThisPlayer->GetCharacter()->GetActorUpVector() * 90;
 
-					//bClimbing = true;
-
 				}
-
 			}
-			//else {
-				//bCanClimb = false;
-				//bCanWallSlide = true;
-			//}
-
-				//if (!bHanging && !bCanClimb)
-					//PerformWallSlide(bCanWallSlide);
-				/*
-				if(ThisPlayer->GetCharacter()->GetMovementComponent()->IsFalling()){
-
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, TEXT("Ledge Trip Detected"));
-
-				ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-				FRotator Forward = ThisPlayer->GetCharacter()->GetActorRotation();
-				ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
-
-				FVector LocationOffset = DownStart;
-				LocationOffset += ThisPlayer->GetCharacter()->GetActorUpVector() * 100;
-
-				ThisPlayer->GetCharacter()->SetActorLocation(LocationOffset, false, false);
-				ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-
-				//bDoneClimbing = false;
-				//bCanClimb = false;
-				//bCanWallTrace = false;
-				//bClimbing = false;
-				//bHanging = false;
-				bLedgeTrip = true;
-				OnRep_Trip();
-				}
-				*/
-				//ThisPlayer->GetCharacter()->GetCharacterMovement()->StopMovementImmediately();
-
-
-
-			//ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 		}
 	}
 }
 
+//I FEEL LIKE I NEGATED THIS METHOD WITH ELEMENTAL METHODS
+//possibly useless?
 int16 ARWBY_CodenameColorsCharacter::GetFrozenPercent() {
 	return FrozenPercent;
 }
 
+//I FEEL LIKE I NEGATED THIS METHOD WITH ELEMENTAL METHODS
+//possibly useless?
 void ARWBY_CodenameColorsCharacter::SetFrozenPercent(int16 NewAmount) {
 	FrozenPercent -= NewAmount;
 }
 
+//return the characters array full of current status effects
 TArray<TEnumAsByte<ECharacterState::Type>> ARWBY_CodenameColorsCharacter::GetStatusEffects() {
 	return CharacterStatusEffects;
 }
 
+//USELESS?
 void ARWBY_CodenameColorsCharacter::LedgeGrab(){
 
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
@@ -891,7 +842,7 @@ void ARWBY_CodenameColorsCharacter::LedgeGrab(){
 
 }
 
-
+//do the wall jumps
 void ARWBY_CodenameColorsCharacter::PerformWallJump(bool CanJump) {
 
 	if (GetNetMode() == NM_Client) {
@@ -902,14 +853,17 @@ void ARWBY_CodenameColorsCharacter::PerformWallJump(bool CanJump) {
 	OnRep_WallJump();
 }
 
+//Calls this method on the server from the client to keep everyone in snyc
 void ARWBY_CodenameColorsCharacter::ServerPerformWallJump_Implementation(bool CanJump){
 	PerformWallJump(CanJump);
 }
 
+//allows the multiplayer to work
 bool ARWBY_CodenameColorsCharacter::ServerPerformWallJump_Validate(bool CanJump){
 	return true; 
 }
 
+//Called from the On_Rep so its replicated 
 void ARWBY_CodenameColorsCharacter::OnWallJump() {
 
 
@@ -920,34 +874,35 @@ void ARWBY_CodenameColorsCharacter::OnWallJump() {
 
 	bSliding = false;
 	bCanWallSlide = false;
+
+	//minor polish the character will wall jump depending on their aninmation
 	GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::ServerAddVelocity, .4367f);
 }
 
+//Sends impulsers at a certain vector to the players to wall jump. Also multiplayer
 void ARWBY_CodenameColorsCharacter::ServerAddVelocity_Implementation() {
 	
 	AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 	if (ThisPlayer) {
-
-
 		if (bWallJumping) {
 
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 			FVector JumpAngle = ThisPlayer->GetCharacter()->GetActorForwardVector() * -100;
 			JumpAngle += ThisPlayer->GetCharacter()->GetActorUpVector() * 150;
 
-
 			ThisPlayer->GetCharacter()->GetCharacterMovement()->AddImpulse(JumpAngle * 7, true);
-			//ThisPlayer->GetCharacter()->GetCharacterMovement()->Velocity = ThisPlayer->GetCharacter()->GetActorForwardVector() *-500;
 		}
 		bWallJumping = false;
 	}
 	
 }
 
+//allows walljumping multiplayer stuff
 bool ARWBY_CodenameColorsCharacter::ServerAddVelocity_Validate() {
 	return true;
 }
 
+//My custom take damage event. (Overriden)
 float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamageEvent & DamageEvent, AController* EventInstigator, AActor * DamageCauser) {
 
 	Health -= DamageAmount;  
@@ -962,20 +917,21 @@ float ARWBY_CodenameColorsCharacter::TakeDamage(float DamageAmount, const FDamag
 	OnRep_Health();
 	return DamageAmount;
 }
+// did you get shot?
 float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEvent & DamageEvent, AController * EventInstigator, AActor * DamageCauser) {
 
-	//Health -= DamageAmount;
-
+	//cast to see who hit you? needs to be a RWBY character 
 	ARWBY_CodenameColorsCharacter * DamageDealer = Cast<ARWBY_CodenameColorsCharacter>(DamageCauser);
-
 	if (DamageDealer) {
 		DetermineElementalDamage(DamageDealer, DamageAmount);
 
 	}
-	FTimerDelegate RemoveState;
 
+	// pretty sure this means nothing
+	FTimerDelegate RemoveState;
 	RemoveStateWithDelay();
 
+	//kill the dude
 	if (Health <= 0) {
 		AMyPlayerController * ThisPlayer = Cast<AMyPlayerController>(Controller);
 		if (ThisPlayer) {
@@ -984,12 +940,11 @@ float ARWBY_CodenameColorsCharacter::GetShot(float DamageAmount, const FDamageEv
 		Destroy();
 	}
 
-
-	//GetWorldTimerManager().SetTimer(TimerHandler_Task, this, &ARWBY_CodenameColorsCharacter::OnFire, 1.f);
 	OnRep_Health();
 	return DamageAmount;
 }
 
+// Effect the player with all the status effects they have
 void ARWBY_CodenameColorsCharacter::DetermineElementalDamage(ARWBY_CodenameColorsCharacter* CurrentPlayer, float DamageAmount){
 
 	switch (CurrentPlayer->PoweredUpState) {
@@ -1113,7 +1068,7 @@ void ARWBY_CodenameColorsCharacter::DetermineElementalDamage(ARWBY_CodenameColor
 	}
 }
 
-
+//Status effects need to be removed. Create timers and remove them after that much time has elasped
 void ARWBY_CodenameColorsCharacter::RemoveStateWithDelay() {
 
 	FTimerDelegate RemoveState;
@@ -1142,6 +1097,7 @@ void ARWBY_CodenameColorsCharacter::RemoveStateWithDelay() {
 
 }
 
+//has someone caught your hands?
 void ARWBY_CodenameColorsCharacter::DealDamage(float Damage, FHitResult LineTrace) {
 
 	APlayerController* MyController = Cast<APlayerController>(GetController());
@@ -1162,16 +1118,19 @@ void ARWBY_CodenameColorsCharacter::DealDamage(float Damage, FHitResult LineTrac
 	}
 }
 
+//heal
 void ARWBY_CodenameColorsCharacter::StartHealing() {
 
 	PerformHealing(true);
 }
 
+//stop heal
 void ARWBY_CodenameColorsCharacter::StopHealing() {
 
 	PerformHealing(false);
 }
 
+//heal over multiplayer
 void ARWBY_CodenameColorsCharacter::PerformHealing(bool Healing) {
 
 	if (GetNetMode() == NM_Client) {
@@ -1182,6 +1141,7 @@ void ARWBY_CodenameColorsCharacter::PerformHealing(bool Healing) {
 	OnRep_Health();
 }
 
+//heal over multiplayer on the server from the client call
 void ARWBY_CodenameColorsCharacter::ServerPerformHealing_Implementation(bool Healing) {
 	PerformHealing(Healing);
 }
@@ -1190,12 +1150,14 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformHealing_Validate(bool Healing) 
 	return true;
 }
 
+//lets a person shoot
 void ARWBY_CodenameColorsCharacter::StartShooting() {
 
 	PerformTask(ETask::Shooting);
 	
 }
 
+//stops them from becoming a sentry gun
 void ARWBY_CodenameColorsCharacter::StopShooting() {
 
 	PerformTask(ETask::None);
@@ -1203,6 +1165,7 @@ void ARWBY_CodenameColorsCharacter::StopShooting() {
 	//GetCharacterMovement()->MaxWalkSpeed = 600.f;
 }
 
+//perform tasks online
 void ARWBY_CodenameColorsCharacter::PerformTask(ETask::Type NewTask) {
 
 	if (GetNetMode() == NM_Client) {
@@ -1215,15 +1178,18 @@ void ARWBY_CodenameColorsCharacter::PerformTask(ETask::Type NewTask) {
 	OnRep_Task();
 }
 
+//Do it online from client to server
 void ARWBY_CodenameColorsCharacter::ServerPerformTask_Implementation(ETask::Type NewTask) {
 
 	PerformTask(NewTask);
 }
 
+//allow the things
 bool ARWBY_CodenameColorsCharacter::ServerPerformTask_Validate(ETask::Type NewTask) {
 	return true;
 }
 
+//get hurt by the elements over multiplayer
 void ARWBY_CodenameColorsCharacter::PerformElementalDamage(float DeltaSeconds) {
 
 	if (GetNetMode() == NM_Client) {
@@ -1233,6 +1199,7 @@ void ARWBY_CodenameColorsCharacter::PerformElementalDamage(float DeltaSeconds) {
 	OnElementalDamage(DeltaSeconds);
 }
 
+
 void ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Implementation(float DeltaSeconds) {
 	PerformElementalDamage(DeltaSeconds);
 }
@@ -1241,6 +1208,7 @@ bool ARWBY_CodenameColorsCharacter::ServerPerformElementalDamage_Validate(float 
 	return true;
 }
 
+// TODO: Fix freezing and gravity
 void ARWBY_CodenameColorsCharacter::OnElementalDamage(float DeltaSeconds) {
 
 	for (int i = 0; i < CharacterStatusEffects.Num(); i++) {
